@@ -8,7 +8,7 @@ namespace Math
 		float z;
 
 		vec3() : x(0), y(0), z(0) {}
-		vec3(float const& x, float const& y, float const& z) : x(x), y(y), z(z) {}
+		vec3(float const x, float const y, float const z) : x(x), y(y), z(z) {}
 		vec3(vec3 const& vec) : x(vec.x), y(vec.y), z(vec.z) {}
 
 		vec3& operator=(vec3 const& vec)
@@ -53,10 +53,7 @@ namespace Math
 
 		vec3& operator*(float const scalar)
 		{
-			x *= scalar;
-			y *= scalar;
-			z *= scalar;
-			return *this;
+			return vec3(x * scalar, y * scalar, z * scalar);
 		}
 
 		bool operator==(vec3 const& vec)
@@ -125,6 +122,7 @@ namespace Math
 
 	vec3 normalize(vec3 const& vec)
 	{
-		return vec3(vec.x / length(vec), vec.y / length(vec), vec.z / length(vec));
+		float len = length(vec);
+		return vec3(vec.x / len, vec.y / len, vec.z / len);
 	}
 }
