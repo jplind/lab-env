@@ -1,6 +1,8 @@
 #include <stdexcept>
 #pragma once
 
+typedef uint32_t uint32;
+
 struct vec4
 {
 	float x;
@@ -12,7 +14,7 @@ struct vec4
 	vec4(float const x, float const y, float const z, float const w) : x(x), y(y), z(z), w(w) {}
 	vec4(vec4 const& vec) : x(vec.x), y(vec.y), z(vec.z), w(vec.w) {}
 
-	vec4& operator=(vec4 const& vec)
+	vec4 operator=(vec4 const& vec)
 	{
 		x = vec.x;
 		y = vec.y;
@@ -20,6 +22,11 @@ struct vec4
 		w = vec.w;
 
 		return *this;
+	}
+
+	vec4 operator-()
+	{
+		return vec4(-x, -y, -z, -w);
 	}
 
 	vec4 operator+(vec4 const& vec)
@@ -100,19 +107,14 @@ struct vec4
 		{
 		default:
 			throw std::out_of_range("index out of range");
-			break;
 		case 0:
 			return x;
-			break;
 		case 1:
 			return y;
-			break;
 		case 2:
 			return z;
-			break;
 		case 3:
 			return w;
-			break;
 		}
 	}
 };

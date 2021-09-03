@@ -1,6 +1,8 @@
 #include <stdexcept>
 #pragma once
 
+typedef uint32_t uint32;
+
 struct vec3
 {
 	float x;
@@ -18,6 +20,11 @@ struct vec3
 		z = vec.z;
 
 		return *this;
+	}
+
+	vec3 operator-()
+	{
+		return vec3(-x, -y, -z);
 	}
 
 	vec3 operator+(vec3 const& vec)
@@ -89,16 +96,12 @@ struct vec3
 		{
 		default:
 			throw std::out_of_range("index out of range");
-			break;
 		case 0:
 			return x;
-			break;
 		case 1:
 			return y;
-			break;
 		case 2:
 			return z;
-			break;
 		}
 	}
 };
