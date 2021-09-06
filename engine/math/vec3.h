@@ -1,6 +1,7 @@
 #pragma once
-#include "config.h"
-#include <stdexcept>
+#include <assert.h>
+
+typedef uint32_t uint32;
 
 struct vec3
 {
@@ -12,13 +13,11 @@ struct vec3
 	vec3(float const x, float const y, float const z) : x(x), y(y), z(z) {}
 	vec3(vec3 const& vec) : x(vec.x), y(vec.y), z(vec.z) {}
 
-	vec3 operator=(vec3 const& vec)
+	void operator=(vec3 const& vec)
 	{
 		x = vec.x;
 		y = vec.y;
 		z = vec.z;
-
-		return *this;
 	}
 
 	vec3 operator-()
@@ -64,37 +63,21 @@ struct vec3
 
 	bool operator==(vec3 const& vec)
 	{
-		if (x == vec.x)
-		{
-			if (y == vec.y)
-			{
-				if (z == vec.z)
-					return true;
-			}
-		}
-		return false;
+		return x == vec.x && y == vec.y && z == vec.z;
 	}
-
 
 	bool operator!=(vec3 const& vec)
 	{
-		if (x == vec.x)
-		{
-			if (y == vec.y)
-			{
-				if (z == vec.z)
-					return false;
-			}
-		}
-		return true;
+		return x != vec.x || y != vec.y || z != vec.z;
 	}
 
 	float& operator[](uint32 const i)
 	{
+		assert(i >= 0 && i < 3);
+
 		switch (i)
 		{
 		default:
-			throw std::out_of_range("index out of range");
 		case 0:
 			return x;
 		case 1:

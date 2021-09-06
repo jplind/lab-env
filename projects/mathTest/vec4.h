@@ -1,5 +1,5 @@
 #pragma once
-#include <stdexcept>
+#include <assert.h>
 
 typedef uint32_t uint32;
 
@@ -14,14 +14,12 @@ struct vec4
 	vec4(float const x, float const y, float const z, float const w) : x(x), y(y), z(z), w(w) {}
 	vec4(vec4 const& vec) : x(vec.x), y(vec.y), z(vec.z), w(vec.w) {}
 
-	vec4 operator=(vec4 const& vec)
+	void operator=(vec4 const& vec)
 	{
 		x = vec.x;
 		y = vec.y;
 		z = vec.z;
 		w = vec.w;
-
-		return *this;
 	}
 
 	vec4 operator-()
@@ -70,43 +68,22 @@ struct vec4
 
 	bool operator==(vec4 const& vec)
 	{
-		if (x == vec.x)
-		{
-			if (y == vec.y)
-			{
-				if (z == vec.z)
-				{
-					if (w == vec.w)
-						return true;
-				}
-			}
-		}
-		return false;
-	}
+		return x == vec.x && y == vec.y && z == vec.z && w == vec.w;
 
+	}
 
 	bool operator!=(vec4 const& vec)
 	{
-		if (x == vec.x)
-		{
-			if (y == vec.y)
-			{
-				if (z == vec.z)
-				{
-					if (w == vec.w)
-						return false;
-				}
-			}
-		}
-		return true;
+		return x != vec.x || y != vec.y || z != vec.z || w != vec.w;
 	}
 
 	float& operator[](uint32 const i)
 	{
+		assert(i >= 0 && i < 4);
+
 		switch (i)
 		{
 		default:
-			throw std::out_of_range("index out of range");
 		case 0:
 			return x;
 		case 1:

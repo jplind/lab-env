@@ -1,7 +1,7 @@
 #pragma once
 #include "vec3.h"
 #include "vec4.h"
-#include <stdexcept>
+#include <assert.h>
 
 typedef uint32_t uint32;
 
@@ -33,54 +33,31 @@ struct mat4
 		m[3] = mat.m[3];
 	}
 
-	mat4 operator=(mat4 const& mat)
+	void operator=(mat4 const& mat)
 	{
 		m[0] = mat.m[0];
 		m[1] = mat.m[1];
 		m[2] = mat.m[2];
 		m[3] = mat.m[3];
-
-		return *this;
 	}
 
 	bool operator==(mat4 const& mat)
 	{
-		if (m[0] == mat.m[0])
-		{
-			if (m[1] == mat.m[1])
-			{
-				if (m[2] == mat.m[2])
-				{
-					if (m[3] == mat.m[3])
-						return true;
-				}
-			}
-		}
-		return false;
+		return m[0] == mat.m[0] && m[1] == mat.m[1] && m[2] == mat.m[2] && m[3] == mat.m[3];
 	}
 
 	bool operator!=(mat4 const& mat)
 	{
-		if (m[0] == mat.m[0])
-		{
-			if (m[1] == mat.m[1])
-			{
-				if (m[2] == mat.m[2])
-				{
-					if (m[3] == mat.m[3])
-						return false;
-				}
-			}
-		}
-		return true;
+		return m[0] != mat.m[0] || m[1] != mat.m[1] || m[2] != mat.m[2] || m[3] != mat.m[3];
 	}
 
 	vec4& operator[](uint32 const i)
 	{
+		assert(i >= 0 && i < 4);
+
 		switch (i)
 		{
 		default:
-			throw std::out_of_range("index out of range");
 		case 0:
 			return m[0];
 		case 1:
@@ -124,21 +101,21 @@ vec4 operator*(mat4 const& mat, vec4 const& vec)
 	return vec4(dot(tMat.m[0], vec), dot(tMat.m[1], vec), dot(tMat.m[2], vec), dot(tMat.m[3], vec));
 }
 
-float determinant(mat4 const& mat)
+float determinant(mat4 const& m)
 {
 	return  
-		mat.m[3].x * mat.m[2].y * mat.m[1].z * mat.m[0].w - mat.m[2].x * mat.m[3].y * mat.m[1].z * mat.m[0].w -
-		mat.m[3].x * mat.m[1].y * mat.m[2].z * mat.m[0].w + mat.m[1].x * mat.m[3].y * mat.m[2].z * mat.m[0].w +
-		mat.m[2].x * mat.m[1].y * mat.m[3].z * mat.m[0].w - mat.m[1].x * mat.m[2].y * mat.m[3].z * mat.m[0].w -
-		mat.m[3].x * mat.m[2].y * mat.m[0].z * mat.m[1].w + mat.m[2].x * mat.m[3].y * mat.m[0].z * mat.m[1].w +
-		mat.m[3].x * mat.m[0].y * mat.m[2].z * mat.m[1].w - mat.m[0].x * mat.m[3].y * mat.m[2].z * mat.m[1].w -
-		mat.m[2].x * mat.m[0].y * mat.m[3].z * mat.m[1].w + mat.m[0].x * mat.m[2].y * mat.m[3].z * mat.m[1].w +
-		mat.m[3].x * mat.m[1].y * mat.m[0].z * mat.m[2].w - mat.m[1].x * mat.m[3].y * mat.m[0].z * mat.m[2].w -
-		mat.m[3].x * mat.m[0].y * mat.m[1].z * mat.m[2].w + mat.m[0].x * mat.m[3].y * mat.m[1].z * mat.m[2].w +
-		mat.m[1].x * mat.m[0].y * mat.m[3].z * mat.m[2].w - mat.m[0].x * mat.m[1].y * mat.m[3].z * mat.m[2].w -
-		mat.m[2].x * mat.m[1].y * mat.m[0].z * mat.m[3].w + mat.m[1].x * mat.m[2].y * mat.m[0].z * mat.m[3].w +
-		mat.m[2].x * mat.m[0].y * mat.m[1].z * mat.m[3].w - mat.m[0].x * mat.m[2].y * mat.m[1].z * mat.m[3].w -
-		mat.m[1].x * mat.m[0].y * mat.m[2].z * mat.m[3].w + mat.m[0].x * mat.m[1].y * mat.m[2].z * mat.m[3].w;
+		m.m[3].x * m.m[2].y * m.m[1].z * m.m[0].w - m.m[2].x * m.m[3].y * m.m[1].z * m.m[0].w -
+		m.m[3].x * m.m[1].y * m.m[2].z * m.m[0].w + m.m[1].x * m.m[3].y * m.m[2].z * m.m[0].w +
+		m.m[2].x * m.m[1].y * m.m[3].z * m.m[0].w - m.m[1].x * m.m[2].y * m.m[3].z * m.m[0].w -
+		m.m[3].x * m.m[2].y * m.m[0].z * m.m[1].w + m.m[2].x * m.m[3].y * m.m[0].z * m.m[1].w +
+		m.m[3].x * m.m[0].y * m.m[2].z * m.m[1].w - m.m[0].x * m.m[3].y * m.m[2].z * m.m[1].w -
+		m.m[2].x * m.m[0].y * m.m[3].z * m.m[1].w + m.m[0].x * m.m[2].y * m.m[3].z * m.m[1].w +
+		m.m[3].x * m.m[1].y * m.m[0].z * m.m[2].w - m.m[1].x * m.m[3].y * m.m[0].z * m.m[2].w -
+		m.m[3].x * m.m[0].y * m.m[1].z * m.m[2].w + m.m[0].x * m.m[3].y * m.m[1].z * m.m[2].w +
+		m.m[1].x * m.m[0].y * m.m[3].z * m.m[2].w - m.m[0].x * m.m[1].y * m.m[3].z * m.m[2].w -
+		m.m[2].x * m.m[1].y * m.m[0].z * m.m[3].w + m.m[1].x * m.m[2].y * m.m[0].z * m.m[3].w +
+		m.m[2].x * m.m[0].y * m.m[1].z * m.m[3].w - m.m[0].x * m.m[2].y * m.m[1].z * m.m[3].w -
+		m.m[1].x * m.m[0].y * m.m[2].z * m.m[3].w + m.m[0].x * m.m[1].y * m.m[2].z * m.m[3].w;
 }
 
 mat4 inverse(mat4 const& m)

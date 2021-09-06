@@ -1,8 +1,9 @@
 #pragma once
 #include "vec3.h"
 #include "vec4.h"
-#include "config.h"
-#include <stdexcept>
+#include <assert.h>
+
+typedef uint32_t uint32;
 
 struct mat4
 {
@@ -32,54 +33,31 @@ struct mat4
 		m[3] = mat.m[3];
 	}
 
-	mat4 operator=(mat4 const& mat)
+	void operator=(mat4 const& mat)
 	{
 		m[0] = mat.m[0];
 		m[1] = mat.m[1];
 		m[2] = mat.m[2];
 		m[3] = mat.m[3];
-
-		return *this;
 	}
 
 	bool operator==(mat4 const& mat)
 	{
-		if (m[0] == mat.m[0])
-		{
-			if (m[1] == mat.m[1])
-			{
-				if (m[2] == mat.m[2])
-				{
-					if (m[3] == mat.m[3])
-						return true;
-				}
-			}
-		}
-		return false;
+		return m[0] == mat.m[0] && m[1] == mat.m[1] && m[2] == mat.m[2] && m[3] == mat.m[3];
 	}
 
 	bool operator!=(mat4 const& mat)
 	{
-		if (m[0] == mat.m[0])
-		{
-			if (m[1] == mat.m[1])
-			{
-				if (m[2] == mat.m[2])
-				{
-					if (m[3] == mat.m[3])
-						return false;
-				}
-			}
-		}
-		return true;
+		return m[0] != mat.m[0] || m[1] != mat.m[1] || m[2] != mat.m[2] || m[3] != mat.m[3];
 	}
 
 	vec4& operator[](uint32 const i)
 	{
+		assert(i >= 0 && i < 4);
+
 		switch (i)
 		{
 		default:
-			throw std::out_of_range("index out of range");
 		case 0:
 			return m[0];
 		case 1:

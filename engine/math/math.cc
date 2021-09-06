@@ -1,3 +1,3 @@
 #pragma once
-#include "math.h"
 #include "config.h"
+#include "math.h"
