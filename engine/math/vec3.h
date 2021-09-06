@@ -1,7 +1,6 @@
-#include <stdexcept>
 #pragma once
-
-typedef uint32_t uint32;
+#include "config.h"
+#include <stdexcept>
 
 struct vec3
 {

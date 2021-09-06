@@ -1,18 +1,21 @@
 #--------------------------------------------------------------------------
-# core
+# math
 #--------------------------------------------------------------------------
 
-SET(files_core
-	app.h
-	app.cc)
-SOURCE_GROUP("core" FILES ${files_core})
+SET(files_math
+	vec3.h
+	vec4.h
+	mat4.h
+	math.h
+	math.cc)
+SOURCE_GROUP("math" FILES ${files_math})
 	
 SET(files_pch ../config.h ../config.cc)
 SOURCE_GROUP("pch" FILES ${files_pch})
-ADD_LIBRARY(core STATIC ${files_core} ${files_pch})
-TARGET_PCH(core ../)
-ADD_DEPENDENCIES(core glew)
-TARGET_LINK_LIBRARIES(core PUBLIC engine exts glew)
+ADD_LIBRARY(math STATIC ${files_math} ${files_pch})
+TARGET_PCH(math ../)
+ADD_DEPENDENCIES(math glew)
+TARGET_LINK_LIBRARIES(math PUBLIC engine exts glew)
 
 FILE(GLOB children RELATIVE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/*)
 FOREACH(child ${children})

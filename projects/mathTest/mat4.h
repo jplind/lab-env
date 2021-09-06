@@ -1,7 +1,7 @@
+#pragma once
 #include "vec3.h"
 #include "vec4.h"
 #include <stdexcept>
-#pragma once
 
 typedef uint32_t uint32;
 
@@ -167,6 +167,10 @@ mat4 inverse(mat4 const& m)
 		- m.m[0].y * (m.m[1].x * A2323 - m.m[1].z * A0323 + m.m[1].w * A0223)
 		+ m.m[0].z * (m.m[1].x * A1323 - m.m[1].y * A0323 + m.m[1].w * A0123)
 		- m.m[0].w * (m.m[1].x * A1223 - m.m[1].y * A0223 + m.m[1].z * A0123);
+
+	if (det == 0)
+		return mat4();
+
 	det = 1 / det;
 
 	vec4 r0 = vec4(
