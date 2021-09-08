@@ -179,24 +179,24 @@ mat4 inverse(mat4 const& m)
 
 mat4 rotationx(float const rad)
 {
-	return transpose(mat4(vec4(1, 0, 0, 0), vec4(0, cos(rad), -sin(rad), 0), vec4(0, sin(rad), cos(rad), 0), vec4(0, 0, 0, 1)));
+	return transpose(mat4(vec4(1, 0, 0, 0), vec4(0, cosf(rad), -sinf(rad), 0), vec4(0, sinf(rad), cosf(rad), 0), vec4(0, 0, 0, 1)));
 }
 
 mat4 rotationy(float const rad)
 {
-	return transpose(mat4(vec4(cos(rad), 0, sin(rad), 0), vec4(0, 1, 0, 0), vec4(-sin(rad), 0, cos(rad), 0), vec4(0, 0, 0, 1)));
+	return transpose(mat4(vec4(cosf(rad), 0, sinf(rad), 0), vec4(0, 1, 0, 0), vec4(-sinf(rad), 0, cosf(rad), 0), vec4(0, 0, 0, 1)));
 }
 
 mat4 rotationz(float const rad)
 {
-	return transpose(mat4(vec4(cos(rad), -sin(rad), 0, 0), vec4(sin(rad), cos(rad), 0, 0), vec4(0, 0, 1, 0), vec4(0, 0, 0, 1)));
+	return transpose(mat4(vec4(cosf(rad), -sinf(rad), 0, 0), vec4(sinf(rad), cosf(rad), 0, 0), vec4(0, 0, 1, 0), vec4(0, 0, 0, 1)));
 }
 
 mat4 rotationaxis(vec3 const& vec, float const rad)
 {
 	vec3 nVec = normalize(vec);
-	float c = cos(rad);
-	float s = sin(rad);
+	float c = cosf(rad);
+	float s = sinf(rad);
 	float C = 1 - c;
 	float x = nVec.x;
 	float y = nVec.y;
