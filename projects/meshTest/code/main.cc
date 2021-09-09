@@ -10,14 +10,12 @@ main(int argc, const char** argv)
 	"layout(location=0) in vec3 pos;\n"
 	"layout(location=1) in vec4 color;\n"
 	"layout(location=0) out vec4 Color;\n"
-	"uniform float myTranslation;\n"
-	"uniform vec2 myRotation;\n"
+	"uniform vec3 myTranslation;\n"
+	"uniform mat4 myRotation;\n"
 	"void main()\n"
 	"{\n"
-	"	gl_Position = vec4(pos, 1) + vec4(myTranslation, 0, 0, 0);\n"
-
-	"	mat4 myMatrix = mat4(vec4(1, 0, 0, 0), vec4(0, myRotation.y, -myRotation.x, 0), vec4(0, myRotation.x, myRotation.y, 0), vec4(0, 0, 0, 1));\n"
-	"	gl_Position = myMatrix * gl_Position;\n"
+	"	gl_Position = vec4(pos + myTranslation, 1);\n"
+	"	gl_Position = myRotation * gl_Position;\n"
 
 	"	Color = color;\n"
 	"}\n";
@@ -32,16 +30,16 @@ main(int argc, const char** argv)
 	"	Color = color * myColor;\n"
 	"}\n";
 
-    if (!glfwInit())
-        return -1;
-
 	GLuint program;
 	GLuint vertexShader;
 	GLuint pixelShader;
     GLFWwindow* window;
 
+	if (!glfwInit())
+		return -1;
+
     // create window
-    window = glfwCreateWindow(800, 600, "TRIANGLE", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "MeshTest", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -109,38 +107,41 @@ main(int argc, const char** argv)
 	// mesh init
 	vertex vertices[] = {
 		vertex(vec3(-0.5f, -0.5f, 0), vec4(1, 0, 0, 1)),
-		vertex(vec3(0, 0.8f, 0), vec4(0, 1, 0, 1)),
-		vertex(vec3(0.5f, -0.8f, 0), vec4(0, 0, 1, 1))
+		vertex(vec3(-0.5f, 0.5f, 0), vec4(0, 1, 0, 1)),
+		vertex(vec3(0.5f, 0.5f, 0), vec4(0, 0, 1, 1)),
+		vertex(vec3(0.5f, -0.5f, 0), vec4(1, 1, 0, 1))
 	};
-	meshResource mesh = meshResource(vertices, sizeof(vertices) / sizeof(vertices[0]));
+	GLuint indices[] = { 0, 1, 2, 0, 2, 3 };
+	meshResource mesh = meshResource(vertices, sizeof(vertices) / sizeof(vertices[0]), indices, sizeof(indices) / sizeof(indices[0]));
 
-    // loop until the user closes the window
+    // enter render loop
     while (!glfwWindowShouldClose(window))
     {
-        // render here
-        glClear(GL_COLOR_BUFFER_BIT);
-        mesh.draw();
+		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(program);
 
-		// update uniform color
+        // draw mesh
+        mesh.draw();
+
+		// get time value for shader calculations
 		float timeValue = float(glfwGetTime());
-		float redValue = sinf(timeValue / 2) / 2.0f + 0.5f;
-		float greenValue = sinf(timeValue / 3) / 2.0f + 0.5f;
-		float blueValue = sinf(timeValue / 4) / 2.0f + 0.5f;
-		int vertexColorLocation = glGetUniformLocation(program, "myColor");
-		glUniform4f(vertexColorLocation, redValue, greenValue, blueValue, 1.0f);
+
+		// update uniform color
+		float redValue = sinf(timeValue) * 0.25f + 0.5f;
+		float greenValue = sinf(timeValue * 0.5f) * 0.25f + 0.5f;
+		float blueValue = sinf(timeValue * 0.1f) * 0.25f + 0.5f;
+		int myColorLocation = glGetUniformLocation(program, "myColor");
+		glUniform4f(myColorLocation, redValue, greenValue, blueValue, 1.0f);
 
 		// update uniform translation
-		float xTranslation = sinf(timeValue) / 2.0f;
-		int translationLocation = glGetUniformLocation(program, "myTranslation");
-		glUniform1f(translationLocation, xTranslation);
+		vec3 translationVector = vec3(sinf(timeValue) / 2.0f, 0, 0);
+		int myTranslationLocation = glGetUniformLocation(program, "myTranslation");
+		glUniform3fv(myTranslationLocation, 1, &translationVector[0]);
 
 		// update uniform rotation
-		float xRotation = timeValue;
-		float sinX = sinf(xRotation);
-		float cosX = cosf(xRotation);
-		int rotationLocation = glGetUniformLocation(program, "myRotation");
-		glUniform2f(rotationLocation, sinX, cosX);
+		mat4 rotationMatrix = rotationx(timeValue) * rotationy(timeValue * 1.2f) * rotationz(timeValue * 0.7f);
+		int myRotationLocation = glGetUniformLocation(program, "myRotation");
+		glUniformMatrix4fv(myRotationLocation, 1, 0, &rotationMatrix[0][0]);
 
         // swap front and back buffers
         glfwSwapBuffers(window);
