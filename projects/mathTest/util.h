@@ -5,12 +5,12 @@
 
 inline vec3 max(vec3 a, vec3 b)
 {
-    return vec3(fmax(a.x, b.x), fmax(a.y, b.y), fmax(a.z, b.z));
+    return vec3(fmaxf(a.x, b.x), fmaxf(a.y, b.y), fmaxf(a.z, b.z));
 }
 
 inline vec4 max(vec4 a, vec4 b)
 {
-    return vec4(fmax(a.x, b.x), fmax(a.y, b.y), fmax(a.z, b.z), fmax(a.w, b.w));
+    return vec4(fmaxf(a.x, b.x), fmaxf(a.y, b.y), fmaxf(a.z, b.z), fmaxf(a.w, b.w));
 }
 
 inline bool cmple(vec3 a, vec3 b)

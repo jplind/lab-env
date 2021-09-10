@@ -1,7 +1,7 @@
 #--------------------------------------------------------------------------
-# math-lib
+# mathTest
 #--------------------------------------------------------------------------
-PROJECT(math-lib)
+PROJECT(mathTest)
 CMAKE_MINIMUM_REQUIRED(VERSION 3.2)
 
 ####################################
@@ -33,6 +33,6 @@ else()
 	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 endif()
 
-SOURCE_GROUP("math-lib" FILES ${files})
+SOURCE_GROUP("mathTest" FILES ${files})
 
-ADD_EXECUTABLE(math-lib ${files})
+ADD_EXECUTABLE(mathTest ${files})

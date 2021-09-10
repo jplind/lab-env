@@ -10,12 +10,11 @@ main(int argc, const char** argv)
 	"layout(location=0) in vec3 pos;\n"
 	"layout(location=1) in vec4 color;\n"
 	"layout(location=0) out vec4 Color;\n"
-	"uniform vec3 myTranslation;\n"
-	"uniform mat4 myRotation;\n"
+	"uniform mat4 myTransform;\n"
 	"void main()\n"
 	"{\n"
-	"	gl_Position = vec4(pos + myTranslation, 1);\n"
-	"	gl_Position = myRotation * gl_Position;\n"
+	"	gl_Position = vec4(pos, 1);\n"
+	"	gl_Position = myTransform * gl_Position;\n"
 
 	"	Color = color;\n"
 	"}\n";
@@ -23,11 +22,10 @@ main(int argc, const char** argv)
 	const GLchar* ps =
 	"#version 430\n"
 	"layout(location=0) in vec4 color;\n"
-	"uniform vec4 myColor;"
 	"out vec4 Color;\n"
 	"void main()\n"
 	"{\n"
-	"	Color = color * myColor;\n"
+	"	Color = color;\n"
 	"}\n";
 
 	GLuint program;
@@ -104,44 +102,74 @@ main(int argc, const char** argv)
 		delete[] buf;
 	}
 
+	// setup z buffer
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	// color setup
+	vec4 red = vec4(0.6f, 0.2f, 0.2f, 1.0f);
+	vec4 green = vec4(0.2f, 0.6f, 0.2f, 1.0f);
+	vec4 blue = vec4(0.2f, 0.2f, 0.6f, 1.0f);
+	vec4 yellow = vec4(0.6f, 0.6f, 0.2f, 1.0f);
+	vec4 purple = vec4(0.6f, 0.2f, 0.6f, 1.0f);
+	vec4 teal = vec4(0.2f, 0.6f, 0.6f, 1.0f);
+
 	// mesh init
 	vertex vertices[] = {
-		vertex(vec3(-0.5f, -0.5f, 0), vec4(1, 0, 0, 1)),
-		vertex(vec3(-0.5f, 0.5f, 0), vec4(0, 1, 0, 1)),
-		vertex(vec3(0.5f, 0.5f, 0), vec4(0, 0, 1, 1)),
-		vertex(vec3(0.5f, -0.5f, 0), vec4(1, 1, 0, 1))
+		vertex(vec3(-0.5f, -0.5f, -0.5f), red),
+		vertex(vec3(-0.5f, 0.5f, -0.5f), red),
+		vertex(vec3(0.5f, 0.5f, -0.5f), red),
+		vertex(vec3(0.5f, -0.5f, -0.5f), red),
+
+		vertex(vec3(-0.5f, -0.5f, 0.5f), green),
+		vertex(vec3(-0.5f, 0.5f, 0.5f), green),
+		vertex(vec3(0.5f, 0.5f, 0.5f), green),
+		vertex(vec3(0.5f, -0.5f, 0.5f), green),
+
+		vertex(vec3(-0.5f, -0.5f, -0.5f), blue),
+		vertex(vec3(-0.5f, 0.5f, -0.5f), blue),
+		vertex(vec3(-0.5f, 0.5f, 0.5f), blue),
+		vertex(vec3(-0.5f, -0.5f, 0.5f), blue),
+
+		vertex(vec3(-0.5f, 0.5f, -0.5f), yellow),
+		vertex(vec3(0.5f, 0.5f, -0.5f), yellow),
+		vertex(vec3(0.5f, 0.5f, 0.5f), yellow),
+		vertex(vec3(-0.5f, 0.5f, 0.5f), yellow),
+
+		vertex(vec3(0.5f, 0.5f, -0.5f), purple),
+		vertex(vec3(0.5f, -0.5f, -0.5f), purple),
+		vertex(vec3(0.5f, -0.5f, 0.5f), purple),
+		vertex(vec3(0.5f, 0.5f, 0.5f), purple),
+
+		vertex(vec3(0.5f, -0.5f, -0.5f), teal),
+		vertex(vec3(-0.5f, -0.5f, -0.5f), teal),
+		vertex(vec3(-0.5f, -0.5f, 0.5f), teal),
+		vertex(vec3(0.5f, -0.5f, 0.5f), teal)
 	};
-	GLuint indices[] = { 0, 1, 2, 0, 2, 3 };
+	GLuint indices[] = {
+		0, 1, 2, 0, 2, 3,
+		4, 5, 6, 4, 6, 7,
+		8, 9, 10, 8, 10, 11,
+		12, 13, 14, 12, 14, 15,
+		16, 17, 18, 16, 18, 19,
+		20, 21, 22, 20, 22, 23
+	};
 	meshResource mesh = meshResource(vertices, sizeof(vertices) / sizeof(vertices[0]), indices, sizeof(indices) / sizeof(indices[0]));
 
-    // enter render loop
+    // render loop
     while (!glfwWindowShouldClose(window))
     {
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(program);
+		mesh.draw();
 
-        // draw mesh
-        mesh.draw();
-
-		// get time value for shader calculations
+		// update uniform transform
 		float timeValue = float(glfwGetTime());
-
-		// update uniform color
-		float redValue = sinf(timeValue) * 0.25f + 0.5f;
-		float greenValue = sinf(timeValue * 0.5f) * 0.25f + 0.5f;
-		float blueValue = sinf(timeValue * 0.1f) * 0.25f + 0.5f;
-		int myColorLocation = glGetUniformLocation(program, "myColor");
-		glUniform4f(myColorLocation, redValue, greenValue, blueValue, 1.0f);
-
-		// update uniform translation
-		vec3 translationVector = vec3(sinf(timeValue) / 2.0f, 0, 0);
-		int myTranslationLocation = glGetUniformLocation(program, "myTranslation");
-		glUniform3fv(myTranslationLocation, 1, &translationVector[0]);
-
-		// update uniform rotation
-		mat4 rotationMatrix = rotationx(timeValue) * rotationy(timeValue * 1.2f) * rotationz(timeValue * 0.7f);
-		int myRotationLocation = glGetUniformLocation(program, "myRotation");
-		glUniformMatrix4fv(myRotationLocation, 1, 0, &rotationMatrix[0][0]);
+		mat4 translation = mat4(vec4(1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, 1, 0), vec4(sinf(timeValue) * 0.25f, 0, 0, 1));
+		mat4 rotation = rotationx(timeValue * 0.1) * rotationy(timeValue * 0.12f) * rotationz(timeValue * 0.07f);
+		mat4 transform = rotation * translation;
+		int myTransformLocation = glGetUniformLocation(program, "myTransform");
+		glUniformMatrix4fv(myTransformLocation, 1, 0, &transform[0][0]);
 
         // swap front and back buffers
         glfwSwapBuffers(window);
