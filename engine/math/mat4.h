@@ -82,15 +82,12 @@ mat4 transpose(mat4 const& mat)
 
 mat4 operator*(mat4 const& a, mat4 const& b)
 {
-	vec4 c0 = vec4(b.m[0].x, b.m[1].x, b.m[2].x, b.m[3].x);
-	vec4 c1 = vec4(b.m[0].y, b.m[1].y, b.m[2].y, b.m[3].y);
-	vec4 c2 = vec4(b.m[0].z, b.m[1].z, b.m[2].z, b.m[3].z);
-	vec4 c3 = vec4(b.m[0].w, b.m[1].w, b.m[2].w, b.m[3].w);
+	mat4 tb = transpose(b);
 
-	vec4 r0 = vec4(dot(a.m[0], c0), dot(a.m[0], c1), dot(a.m[0], c2), dot(a.m[0], c3));
-	vec4 r1 = vec4(dot(a.m[1], c0), dot(a.m[1], c1), dot(a.m[1], c2), dot(a.m[1], c3));
-	vec4 r2 = vec4(dot(a.m[2], c0), dot(a.m[2], c1), dot(a.m[2], c2), dot(a.m[2], c3));
-	vec4 r3 = vec4(dot(a.m[3], c0), dot(a.m[3], c1), dot(a.m[3], c2), dot(a.m[3], c3));
+	vec4 r0 = vec4(dot(a.m[0], tb[0]), dot(a.m[0], tb[1]), dot(a.m[0], tb[2]), dot(a.m[0], tb[3]));
+	vec4 r1 = vec4(dot(a.m[1], tb[0]), dot(a.m[1], tb[1]), dot(a.m[1], tb[2]), dot(a.m[1], tb[3]));
+	vec4 r2 = vec4(dot(a.m[2], tb[0]), dot(a.m[2], tb[1]), dot(a.m[2], tb[2]), dot(a.m[2], tb[3]));
+	vec4 r3 = vec4(dot(a.m[3], tb[0]), dot(a.m[3], tb[1]), dot(a.m[3], tb[2]), dot(a.m[3], tb[3]));
 
 	return mat4(r0, r1, r2, r3);
 }
@@ -179,17 +176,17 @@ mat4 inverse(mat4 const& m)
 
 mat4 rotationx(float const rad)
 {
-	return transpose(mat4(vec4(1, 0, 0, 0), vec4(0, cosf(rad), -sinf(rad), 0), vec4(0, sinf(rad), cosf(rad), 0), vec4(0, 0, 0, 1)));
+	return mat4(vec4(1, 0, 0, 0), vec4(0, cosf(rad), sinf(rad), 0), vec4(0, -sinf(rad), cosf(rad), 0), vec4(0, 0, 0, 1));
 }
 
 mat4 rotationy(float const rad)
 {
-	return transpose(mat4(vec4(cosf(rad), 0, sinf(rad), 0), vec4(0, 1, 0, 0), vec4(-sinf(rad), 0, cosf(rad), 0), vec4(0, 0, 0, 1)));
+	return mat4(vec4(cosf(rad), 0, -sinf(rad), 0), vec4(0, 1, 0, 0), vec4(sinf(rad), 0, cosf(rad), 0), vec4(0, 0, 0, 1));
 }
 
 mat4 rotationz(float const rad)
 {
-	return transpose(mat4(vec4(cosf(rad), -sinf(rad), 0, 0), vec4(sinf(rad), cosf(rad), 0, 0), vec4(0, 0, 1, 0), vec4(0, 0, 0, 1)));
+	return mat4(vec4(cosf(rad), sinf(rad), 0, 0), vec4(-sinf(rad), cosf(rad), 0, 0), vec4(0, 0, 1, 0), vec4(0, 0, 0, 1));
 }
 
 mat4 rotationaxis(vec3 const& vec, float const rad)
@@ -207,4 +204,31 @@ mat4 rotationaxis(vec3 const& vec, float const rad)
 		vec4(x * y * C + z * s, y * y + (x * x + z * z) * c, y * z * C - x * s, 0),
 		vec4(x * z * C - y * s, y * z * C + x * s, z * z + (x * x + y * y) * c, 0),
 		vec4(0, 0, 0, 1)));
+}
+
+mat4 perspective(float const fovy, float const aspect, float const near, float const far)
+{
+	float yScale = 1.0f / tanf(fovy / 2.0f);
+	float xScale = yScale / aspect;
+
+	mat4 viewMatrix = mat4(vec4(xScale, 0, 0, 0), vec4(0, yScale, 0, 0), vec4(0, 0, far / (far - near), 1), vec4(0, 0, -far * near / (far - near), 0));
+
+	return viewMatrix;
+}
+
+mat4 lookat(vec3 const& eye, vec3 const& at, vec3 const& up)
+{
+	vec3 zAxis = normalize(at - eye);
+	vec3 xAxis = normalize(cross(zAxis, up));
+	vec3 yAxis = cross(xAxis, zAxis);
+
+	zAxis = -zAxis;
+
+	mat4 viewMatrix = mat4(vec4(xAxis.x, xAxis.y, xAxis.z, 0), vec4(yAxis.x, yAxis.y, yAxis.z, 0), vec4(zAxis.x, zAxis.y, zAxis.z, 0), vec4(0, 0, 0, 1))
+		* mat4(vec4(1, 0, 0, eye.x), vec4(0, 1, 0, eye.y), vec4(0, 0, 1, eye.z), vec4(0, 0, 0, 1))
+		* mat4(vec4(-1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, -1, 0), vec4(0, 0, 0, 1));
+
+	viewMatrix = transpose(viewMatrix);
+
+	return viewMatrix;
 }

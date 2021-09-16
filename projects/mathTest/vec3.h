@@ -88,6 +88,12 @@ struct vec3
 	}
 };
 
+vec3 operator-(vec3 const& a, vec3 const& b)
+{
+	return vec3(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+
 float dot(vec3 const& a, vec3 const& b)
 {
 	return a.x * b.x + a.y * b.y + a.z * b.z;

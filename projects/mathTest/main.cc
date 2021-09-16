@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
-
 #include "util.h"
 #include "vec3.h"
 #include "vec4.h"
 #include "mat4.h"
+#define TEST_VIEW_PERSPECTIVE
+#define USE_LH
 
 const char* programName = "Math library";
 const char* s = "OK";

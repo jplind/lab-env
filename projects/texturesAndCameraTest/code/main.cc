@@ -110,10 +110,10 @@ main(int argc, const char** argv)
 	glDepthFunc(GL_LESS);
 	
 	// create cube meshes from position and size
-	meshResource cubeMesh1 = meshResource(vec3(0.15, -1.4, 0), 0.5);
-	meshResource cubeMesh2 = meshResource(vec3(0, 0.9, 0.2), 0.5);
-	meshResource cubeMesh3 = meshResource(vec3(-0.2, 1, 2.2), 0.5);
-	meshResource cubeMesh4 = meshResource(vec3(-2, 0.25, 0.85), 0.5);
+	meshResource cubeMesh1 = meshResource(vec3(0.15, -1.4, 0.5), 0.5);
+	meshResource cubeMesh2 = meshResource(vec3(0, 0.6, -0.2), 0.5);
+	meshResource cubeMesh3 = meshResource(vec3(-0.2, 1, 3.2), 0.5);
+	meshResource cubeMesh4 = meshResource(vec3(-6, 0.25, 0.85), 0.5);
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -133,10 +133,11 @@ main(int argc, const char** argv)
 		int modelTransformMatrixUniformLocation = glGetUniformLocation(program, "modelTransformMatrix");
 		glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, 0, &modelTransformMatrix[0][0]);
 
-		const float distance = 6;
+		// update uniform viewProjection
+		const float distance = 5;
 		const float speed = 0.25;
 		const vec3 at = vec3(-1, 0, 1);
-		const vec3 eye = vec3(cosf(timeValue * speed) * distance, -1, sinf(timeValue * speed) * distance);
+		const vec3 eye = vec3(cosf(timeValue * speed) * distance, -1, sinf(timeValue * speed) * distance) + at;
 		const vec3 up = vec3(0, 1, 0);
 
 		mat4 viewMatrix = perspective(70, (float)width / (float)height, 0.1f, 50.0f);
