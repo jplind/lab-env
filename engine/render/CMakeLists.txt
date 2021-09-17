@@ -5,7 +5,8 @@
 SET(files_render_display
 	window.h
 	window.cc
-	meshResource.h)
+	meshResource.h
+	textureResource.h)
 SOURCE_GROUP("display" FILES ${files_render_display})
 
 

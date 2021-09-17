@@ -6,15 +6,14 @@ struct textureResource
 {
 	GLuint texture;
 	std::string filePath;
-	unsigned char* localBuffer = nullptr;
+	unsigned char* buffer;
 	int width;
 	int height;
 	int BPP;
 
-	textureResource(const std::string& path) : filePath(path) 
+	textureResource(const std::string& filePath) : filePath(filePath) 
 	{
-		stbi_set_flip_vertically_on_load(1);
-		localBuffer = stbi_load(path.c_str(), &width, &height, &BPP, 4);
+		buffer = stbi_load(filePath.c_str(), &width, &height, &BPP, 4);
 
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
@@ -24,11 +23,11 @@ struct textureResource
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, localBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		if (localBuffer)
-			stbi_image_free(localBuffer);
+		if (buffer)
+			stbi_image_free(buffer);
 	}
 
 	~textureResource()
@@ -36,7 +35,7 @@ struct textureResource
 		glDeleteTextures(1, &texture);
 	}
 
-	void bind(unsigned int slot = 0)
+	void bind(unsigned int slot)
 	{
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_2D, texture);

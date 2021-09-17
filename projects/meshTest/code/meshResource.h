@@ -59,19 +59,12 @@ struct meshResource
 	vertex* generateCubeVertices(vec3 pos, float size)
 	{
 		// setup colors
-		//vec4 red = vec4(0.6f, 0.2f, 0.2f, 1.0f);
-		//vec4 green = vec4(0.2f, 0.6f, 0.2f, 1.0f);
-		//vec4 blue = vec4(0.2f, 0.2f, 0.6f, 1.0f);
-		//vec4 yellow = vec4(0.6f, 0.6f, 0.2f, 1.0f);
-		//vec4 purple = vec4(0.6f, 0.2f, 0.6f, 1.0f);
-		//vec4 teal = vec4(0.2f, 0.6f, 0.6f, 1.0f);
-
-		vec4 red = randomColor();
-		vec4 green = randomColor();
-		vec4 blue = randomColor();
-		vec4 yellow = randomColor();
-		vec4 purple = randomColor();
-		vec4 teal = randomColor();
+		vec4 red = vec4(0.6f, 0.2f, 0.2f, 1.0f);
+		vec4 green = vec4(0.2f, 0.6f, 0.2f, 1.0f);
+		vec4 blue = vec4(0.2f, 0.2f, 0.6f, 1.0f);
+		vec4 yellow = vec4(0.6f, 0.6f, 0.2f, 1.0f);
+		vec4 purple = vec4(0.6f, 0.2f, 0.6f, 1.0f);
+		vec4 teal = vec4(0.2f, 0.6f, 0.6f, 1.0f);
 
 		// setup scaled cube vertices
 		vertex cubeVertices[24] = {
@@ -107,11 +100,6 @@ struct meshResource
 		};
 
 		return cubeVertices;
-	}
-
-	vec4 randomColor()
-	{
-		return vec4((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX, 1);
 	}
 
 	void draw()

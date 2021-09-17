@@ -110,10 +110,10 @@ main(int argc, const char** argv)
 	glDepthFunc(GL_LESS);
 	
 	// create cube meshes from position and size
-	meshResource cubeMesh1 = meshResource(vec3(0.15, -1.4, 0), 0.5);
-	meshResource cubeMesh2 = meshResource(vec3(0, 0.9, 0.2), 0.5);
-	meshResource cubeMesh3 = meshResource(vec3(-0.2, 1, 2.2), 0.5);
-	meshResource cubeMesh4 = meshResource(vec3(-2, 0.25, 0.85), 0.5);
+	meshResource cubeMesh1 = meshResource(vec3(0.15f, -1.4f, 0.0f), 0.5f);
+	meshResource cubeMesh2 = meshResource(vec3(-4.0f, 0.9f, 0.2f), 0.5f);
+	meshResource cubeMesh3 = meshResource(vec3(-0.2f, 1.0f, 2.2f), 0.5f);
+	meshResource cubeMesh4 = meshResource(vec3(-2.0f, 0.25f, 0.85f), 0.5f);
 
     // render loop
     while (!glfwWindowShouldClose(window))

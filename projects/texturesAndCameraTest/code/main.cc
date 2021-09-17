@@ -1,7 +1,7 @@
 #include "config.h"
 #include "render/window.h"
-#include "meshResource.h"
-#include "textureResource.h"
+#include "render/meshResource.h"
+#include "render/textureResource.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -10,15 +10,13 @@ main(int argc, const char** argv)
 {
 	const GLchar* vs =
 	"#version 430\n"
-	"layout(location=0) in vec3 pos;\n"
+	"layout(location=0) in vec3 vertexPos;\n"
 	"layout(location=2) in vec2 vertexUV;\n"
 	"out vec2 UV;\n"
-	"uniform mat4 modelTransformMatrix;\n"
-	"uniform mat4 viewProjectionMatrix;\n"
 	"uniform mat4 MVP;\n"
 	"void main()\n"
 	"{\n"
-	"	gl_Position = vec4(pos, 1);\n"
+	"	gl_Position = vec4(vertexPos, 1);\n"
 	"	gl_Position = MVP * gl_Position;\n"
 	"	UV = vertexUV;\n"
 	"}\n";
@@ -44,7 +42,7 @@ main(int argc, const char** argv)
 		return -1;
 
     // create window
-    window = glfwCreateWindow(width, height, "MeshTest", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Textures and camera", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -113,15 +111,15 @@ main(int argc, const char** argv)
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	
-	// create cube meshes from position and size
-	meshResource cubeMesh1 = meshResource(vec3(0.15, -1.4, 0), 0.5);
-	meshResource cubeMesh2 = meshResource(vec3(-4, 0.9, 0.2), 0.5);
-	meshResource cubeMesh3 = meshResource(vec3(-0.2, 1, 2.2), 0.5);
-	meshResource cubeMesh4 = meshResource(vec3(-2, 0.25, 0.85), 0.5);
+	// create cube meshes
+	meshResource cubeMesh1 = meshResource(vec3(0.15f, -1.4f, 0.0f), 0.5f);
+	meshResource cubeMesh2 = meshResource(vec3(-4.0f, 0.9f, 0.2f), 0.5f);
+	meshResource cubeMesh3 = meshResource(vec3(-0.2f, 1.0f, 2.2f), 0.5f);
+	meshResource cubeMesh4 = meshResource(vec3(-2.0f, 0.25f, 0.85f), 0.5f);
 
 	// setup texture
-	textureResource wallTexture = textureResource("wall.jpg");
-	wallTexture.bind();
+	textureResource wallTexture = textureResource("../../../wall.jpg");
+	wallTexture.bind(0);
 	glUniform1f(glGetUniformLocation(program, "myTextureSampler"), 0);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -135,16 +133,16 @@ main(int argc, const char** argv)
 		cubeMesh3.draw();
 		cubeMesh4.draw();
 
-		// update mvp
+		// update mvp uniform
 		float timeValue = float(glfwGetTime());
-		const float distance = 6;
-		const float speed = 0.25;
+		const float cameraDistance = 6;
+		const float cameraSpeed = 0.25;
 		const vec3 at = vec3(-1, 0, 1);
-		const vec3 eye = vec3(cosf(timeValue * speed) * distance, -1, sinf(timeValue * speed) * distance);
+		const vec3 eye = vec3(cosf(timeValue * cameraSpeed) * cameraDistance, -1, sinf(timeValue * cameraSpeed) * cameraDistance);
 		const vec3 up = vec3(0, 1, 0);
 
 		mat4 modelTransformMatrix = mat4();
-		mat4 viewMatrix = perspective(70, (float)width / (float)height, 0.1, 50.0);
+		mat4 viewMatrix = perspective(70, (float)width / (float)height, 0.1f, 50.0f);
 		mat4 projectionMatrix = lookat(eye, at, up);
 
 		mat4 MVP = projectionMatrix * viewMatrix * modelTransformMatrix;
