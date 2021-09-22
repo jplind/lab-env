@@ -5,6 +5,48 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+float yaw = -90;
+float pitch = 0;
+bool firstMouse = true;
+float lastX = 800 * 0.5;
+float lastY = 600 * 0.5;
+vec3 cameraForward = vec3(0, 0, -1);
+
+void mouse_callback(GLFWwindow* window, double xPos, double yPos)
+{
+	if (firstMouse)
+	{
+		lastX = xPos;
+		lastY = yPos;
+		firstMouse = false;
+	}
+
+	float xOffset = xPos - lastX;
+	float yOffset = yPos - lastY;
+	lastX = xPos;
+	lastY = yPos;
+
+	float sensitivity = 0.05f;
+	xOffset *= sensitivity;
+	yOffset *= sensitivity;
+
+	yaw -= xOffset;
+	pitch += yOffset;
+
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+
+	float pi = 2.0f * asinf(1.0f);
+	float toRadians = pi / 180.0f;
+	vec3 forward = vec3();
+	forward.x = cosf(yaw * toRadians) * cosf(pitch * toRadians);
+	forward.y = sinf(pitch * toRadians);
+	forward.z = sinf(yaw * toRadians) * cosf(pitch * toRadians);
+	cameraForward = normalize(forward);
+}
+
 int main(int argc, const char** argv)
 {
     GLFWwindow* window;
@@ -50,22 +92,49 @@ int main(int argc, const char** argv)
 	mat4 projectionMatrix = perspective(70, (float)width / (float)height, 0.1f, 50.0f);
 
 	// setup view matrix
-	const float cameraDistance = 6;
-	const float cameraSpeed = 0.25;
-	const float cameraHeight = -2;
+	//const float cameraDistance = 6;
+	const float cameraSpeed = 4;
+	//const float cameraHeight = -2;
 	vec3 eye = vec3();
 	const vec3 at = vec3(0, 0, 0);
-	const vec3 up = vec3(0, 1, 0);
+	vec3 up = vec3(0, 1, 0);
+
+	// camera
+	float deltaTime = 0;
+	float lastFrame = 0;
+	vec3 cameraPos = vec3(0, -1, 10);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, mouse_callback);
 
     // render loop
     while (!glfwWindowShouldClose(window))
     {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			glfwSetWindowShouldClose(window, true);
+
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+			cameraPos += cameraForward * cameraSpeed * deltaTime;
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+			cameraPos -= cameraForward * cameraSpeed * deltaTime;
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+			cameraPos += up * cameraSpeed * deltaTime;
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+			cameraPos -= up * cameraSpeed * deltaTime;
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+			cameraPos += normalize(cross(cameraForward, up)) * cameraSpeed * deltaTime;
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+			cameraPos -= normalize(cross(cameraForward, up)) * cameraSpeed * deltaTime;
+
 		// update camera
-		float timeValue = float(glfwGetTime());
-		eye = vec3(cosf(timeValue * cameraSpeed) * cameraDistance, cameraHeight, sinf(timeValue * cameraSpeed) * cameraDistance);
-		mat4 viewMatrix = lookat(eye, at, up);
+		//float timeValue = float(glfwGetTime());
+		//eye = vec3(cosf(timeValue * cameraSpeed) * cameraDistance, cameraHeight, sinf(timeValue * cameraSpeed) * cameraDistance);
+		mat4 viewMatrix = lookat(cameraPos, cameraPos + cameraForward, up);
 
 		int viewMatrixUniformLocation = glGetUniformLocation(shader->program, "viewMatrix");
 		int projectionMatrixUniformLocation = glGetUniformLocation(shader->program, "projectionMatrix");
