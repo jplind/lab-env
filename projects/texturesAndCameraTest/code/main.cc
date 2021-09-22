@@ -142,10 +142,10 @@ main(int argc, const char** argv)
 		const vec3 up = vec3(0, 1, 0);
 
 		mat4 modelTransformMatrix = mat4();
-		mat4 viewMatrix = perspective(70, (float)width / (float)height, 0.1f, 50.0f);
-		mat4 projectionMatrix = lookat(eye, at, up);
+		mat4 projectionMatrix = perspective(70, (float)width / (float)height, 0.1f, 50.0f);
+		mat4 viewMatrix = lookat(eye, at, up);
 
-		mat4 MVP = projectionMatrix * viewMatrix * modelTransformMatrix;
+		mat4 MVP = modelTransformMatrix * viewMatrix * projectionMatrix;
 
 		int MVPUniformLocation = glGetUniformLocation(program, "MVP");
 		glUniformMatrix4fv(MVPUniformLocation, 1, 0, &MVP[0][0]);

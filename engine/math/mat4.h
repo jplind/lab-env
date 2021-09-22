@@ -211,9 +211,9 @@ mat4 perspective(float const fovy, float const aspect, float const near, float c
 	float yScale = 1.0f / tanf(fovy / 2.0f);
 	float xScale = yScale / aspect;
 
-	mat4 viewMatrix = mat4(vec4(xScale, 0, 0, 0), vec4(0, yScale, 0, 0), vec4(0, 0, far / (far - near), 1), vec4(0, 0, -far * near / (far - near), 0));
+	mat4 projectionMatrix = mat4(vec4(xScale, 0, 0, 0), vec4(0, yScale, 0, 0), vec4(0, 0, far / (far - near), 1), vec4(0, 0, -far * near / (far - near), 0));
 
-	return viewMatrix;
+	return projectionMatrix;
 }
 
 mat4 lookat(vec3 const& eye, vec3 const& at, vec3 const& up)
