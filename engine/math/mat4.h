@@ -211,7 +211,7 @@ mat4 perspective(float const& fovy, float const& aspect, float const& near, floa
 	float yScale = 1.0f / tanf(fovy / 2.0f);
 	float xScale = yScale / aspect;
 
-	mat4 projectionMatrix = mat4(vec4(xScale, 0, 0, 0), vec4(0, yScale, 0, 0), vec4(0, 0, far / (far - near), 1), vec4(0, 0, -far * near / (far - near), 0));
+	mat4 projectionMatrix = mat4(vec4(xScale, 0, 0, 0), vec4(0, yScale, 0, 0), vec4(0, 0, -far / (far - near), -1), vec4(0, 0, -far * near / (far - near), 0));
 
 	return projectionMatrix;
 }
@@ -225,8 +225,7 @@ mat4 lookat(vec3 const& eye, vec3 const& at, vec3 const& up)
 	zAxis = -zAxis;
 
 	mat4 viewMatrix = mat4(vec4(xAxis.x, xAxis.y, xAxis.z, 0), vec4(yAxis.x, yAxis.y, yAxis.z, 0), vec4(zAxis.x, zAxis.y, zAxis.z, 0), vec4(0, 0, 0, 1))
-		* mat4(vec4(1, 0, 0, eye.x), vec4(0, 1, 0, eye.y), vec4(0, 0, 1, eye.z), vec4(0, 0, 0, 1))
-		* mat4(vec4(-1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, -1, 0), vec4(0, 0, 0, 1));
+		* mat4(vec4(1, 0, 0, -eye.x), vec4(0, 1, 0, -eye.y), vec4(0, 0, 1, -eye.z), vec4(0, 0, 0, 1));
 
 	viewMatrix = transpose(viewMatrix);
 

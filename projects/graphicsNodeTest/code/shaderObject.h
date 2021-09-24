@@ -6,15 +6,15 @@
 
 using namespace std;
 
-struct shaderProgramSource
-{
-	string vertexSource;
-	string fragmentSource;
-};
-
 struct shaderObject
 {
 	GLuint program;
+
+	struct shaderProgramSource
+	{
+		string vertexSource;
+		string fragmentSource;
+	};
 
 	shaderObject(string const& filepath)
 	{
@@ -25,6 +25,12 @@ struct shaderObject
 	shaderProgramSource parseShaderFile(string const& filePath)
 	{
 		ifstream stream(filePath);
+		if (!stream)
+		{
+			cout << "Failed to open " << filePath << endl;
+			exit(-1);
+		}
+
 		string line;
 		stringstream ss[2];
 		int type;

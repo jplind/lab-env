@@ -5,13 +5,13 @@ struct cameraObject
 {
 	GLFWwindow* window;
 	shared_ptr<shaderObject> shader;
-	vec3 position = vec3(1, -1, 6);
+	vec3 position;
 	vec3 lookatDirection = vec3(0, 0, -1);
 	vec3 up = vec3(0, 1, 0);
 	const float sensitivity = 0.05f;
-	const float cameraSpeed = 4;
-	int width = 800;
-	int height = 600;
+	const float cameraSpeed = 5;
+	int width;
+	int height;
 
 	mat4 projectionMatrix = perspective(70, (float)width / (float)height, 0.1f, 50.0f);
 
@@ -19,26 +19,23 @@ struct cameraObject
 	float yaw = -90;
 	float pitch = 0;
 	bool firstUpdate = true;
-	float lastX = 800 * 0.5;
-	float lastY = 600 * 0.5;
+	float lastX = 0;
+	float lastY = 0;
 	
 	// constructor
-	cameraObject(GLFWwindow* window, shared_ptr<shaderObject> shader) : window(window), shader(shader) {}
+	cameraObject(GLFWwindow* window, shared_ptr<shaderObject> shader, vec3 const& position, int const& width, int const& height) 
+		: window(window), shader(shader), position(position), width(width), height(height) {}
 
 	void update(float const& deltaTime)
 	{
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			position += lookatDirection * cameraSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			position -= lookatDirection * cameraSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			position += normalize(cross(lookatDirection, up)) * cameraSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			position -= normalize(cross(lookatDirection, up)) * cameraSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-			position += up * cameraSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-			position -= up * cameraSpeed * deltaTime;
+		// update position from wasd input
+		vec3 translation = vec3();
+		translation += normalize(vec3(lookatDirection.x, 0, lookatDirection.z))
+			* (float)((int)(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) - (int)(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS));
+		translation += cross(lookatDirection, up)
+			* (float)((int)(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) - (int)(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS));
+		if (translation != vec3())
+			position += normalize(translation) * cameraSpeed * deltaTime;
 
 		// get cursor xy coordinates
 		double xPos;
@@ -69,14 +66,14 @@ struct cameraObject
 		yOffset *= sensitivity;
 		
 		// add offsets to yaw and pitch
-		yaw -= xOffset;
-		pitch += yOffset;
+		yaw += xOffset;
+		pitch -= yOffset;
 		
-		// clamp pitch to prevent flipping around y-axis
-		if (pitch > 89.0f)
-			pitch = 89.0f;
-		if (pitch < -89.0f)
-			pitch = -89.0f;
+		// clamp pitch to prevent flipping y-axis and breaking neck
+		if (pitch > 50.0f)
+			pitch = 50.0f;
+		if (pitch < -70.0f)
+			pitch = -70.0f;
 		
 		// construct new lookat direction from yaw and pitch
 		lookatDirection = normalize(vec3(cosf(toRadians(yaw)) * cosf(toRadians(pitch)), sinf(toRadians(pitch)), sinf(toRadians(yaw)) * cosf(toRadians(pitch))));

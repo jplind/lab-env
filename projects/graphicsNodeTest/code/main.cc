@@ -42,19 +42,19 @@ int main(int argc, const char** argv)
 
 	// setup shared resources
 	shared_ptr<meshResource> mesh(new meshResource(0.5));
-	shared_ptr<textureResource> texture(new textureResource("crateTexture.png"));
-	shared_ptr<shaderObject> shader(new shaderObject("test.shader"));
+	shared_ptr<textureResource> texture(new textureResource("../../../crateTexture.png"));
+	shared_ptr<shaderObject> shader(new shaderObject("../../../test.shader"));
 
 	// setup graphicsNodes
-	graphicsNode node1(vec3(-0.1f, 0, -0.1f), mesh, texture, shader);
-	graphicsNode node2(vec3(1, 0, -0.1f), mesh, texture, shader);
-	graphicsNode node3(vec3(2.2f, 0, 0), mesh, texture, shader);
-	graphicsNode node4(vec3(-0.3f, 1, 0.2f), mesh, texture, shader);
-	graphicsNode node5(vec3(1.3f, 1, 0), mesh, texture, shader);
-	graphicsNode node6(vec3(-0.3f, 0, 1), mesh, texture, shader);
+	graphicsNode node1(vec3(0.1f, 0, -0.1f), mesh, texture, shader);
+	graphicsNode node2(vec3(-1, 0, -0.1f), mesh, texture, shader);
+	graphicsNode node3(vec3(-2.2f, 0, 0), mesh, texture, shader);
+	graphicsNode node4(vec3(0.3f, 1, 0.2f), mesh, texture, shader);
+	graphicsNode node5(vec3(-1.3f, 1, 0), mesh, texture, shader);
+	graphicsNode node6(vec3(0.3f, 0, 1), mesh, texture, shader);
 
 	// setup camera
-	cameraObject camera = cameraObject(window, shader);
+	cameraObject camera = cameraObject(window, shader, vec3(-1, 1, 6), width, height);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// setup delta time
@@ -64,6 +64,7 @@ int main(int argc, const char** argv)
     // render loop
     while (!glfwWindowShouldClose(window))
     {
+		// press esc to terminate
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
 
