@@ -10,7 +10,7 @@ struct graphicsNode
 	shared_ptr<textureResource> texture;
 	shared_ptr<shaderObject> shader;
 
-	graphicsNode(const vec3& pos, const shared_ptr<meshResource> mesh, const shared_ptr<textureResource> texture, const shared_ptr<shaderObject> shader)
+	graphicsNode(vec3 const& pos, shared_ptr<meshResource> mesh, shared_ptr<textureResource> texture, shared_ptr<shaderObject> shader)
 		: transform(pos), mesh(mesh), texture(texture), shader(shader) {}
 
 	void draw()

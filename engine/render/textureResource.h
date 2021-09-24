@@ -11,7 +11,7 @@ struct textureResource
 	int height;
 	int BPP;
 
-	textureResource(const std::string& filePath) : filePath(filePath) 
+	textureResource(std::string const& filePath) : filePath(filePath) 
 	{
 		buffer = stbi_load(filePath.c_str(), &width, &height, &BPP, 4);
 
@@ -35,7 +35,7 @@ struct textureResource
 		glDeleteTextures(1, &texture);
 	}
 
-	void bind(unsigned int slot)
+	void bind(unsigned int const& slot)
 	{
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_2D, texture);

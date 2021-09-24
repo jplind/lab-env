@@ -54,9 +54,9 @@ struct meshResource
 		glBindVertexArray(0);
 	}
 
-	meshResource(float size) : meshResource(generateCubeVertices(size), 24, cubeIndices, 36) {}
+	meshResource(float const& size) : meshResource(generateCubeVertices(size), 24, cubeIndices, 36) {}
 
-	vertex* generateCubeVertices(float size)
+	vertex* generateCubeVertices(float const& size)
 	{
 		// setup cube vertices
 		vertex cubeVertices[24] = {

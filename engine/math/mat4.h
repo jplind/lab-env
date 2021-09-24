@@ -51,7 +51,7 @@ struct mat4
 		return m[0] != mat.m[0] || m[1] != mat.m[1] || m[2] != mat.m[2] || m[3] != mat.m[3];
 	}
 
-	vec4& operator[](uint32 const i)
+	vec4& operator[](uint32 const& i)
 	{
 		assert(i >= 0 && i < 4);
 
@@ -174,17 +174,17 @@ mat4 inverse(mat4 const& m)
 	return mat4(r0, r1, r2, r3);
 }
 
-mat4 rotationx(float const rad)
+mat4 rotationx(float const& rad)
 {
 	return mat4(vec4(1, 0, 0, 0), vec4(0, cosf(rad), sinf(rad), 0), vec4(0, -sinf(rad), cosf(rad), 0), vec4(0, 0, 0, 1));
 }
 
-mat4 rotationy(float const rad)
+mat4 rotationy(float const& rad)
 {
 	return mat4(vec4(cosf(rad), 0, -sinf(rad), 0), vec4(0, 1, 0, 0), vec4(sinf(rad), 0, cosf(rad), 0), vec4(0, 0, 0, 1));
 }
 
-mat4 rotationz(float const rad)
+mat4 rotationz(float const& rad)
 {
 	return mat4(vec4(cosf(rad), sinf(rad), 0, 0), vec4(-sinf(rad), cosf(rad), 0, 0), vec4(0, 0, 1, 0), vec4(0, 0, 0, 1));
 }
@@ -206,7 +206,7 @@ mat4 rotationaxis(vec3 const& vec, float const rad)
 		vec4(0, 0, 0, 1)));
 }
 
-mat4 perspective(float const fovy, float const aspect, float const near, float const far)
+mat4 perspective(float const& fovy, float const& aspect, float const& near, float const& far)
 {
 	float yScale = 1.0f / tanf(fovy / 2.0f);
 	float xScale = yScale / aspect;

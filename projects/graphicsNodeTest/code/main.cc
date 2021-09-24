@@ -9,46 +9,6 @@
 #include "render/stb_image.h"
 #pragma warning(default : 26451 6262)
 
-float yaw = -90;
-float pitch = 0;
-bool firstMouse = true;
-float lastX = 800 * 0.5;
-float lastY = 600 * 0.5;
-vec3 cameraForward = vec3(0, 0, -1);
-
-void mouse_callback(GLFWwindow* window, double xPos, double yPos)
-{
-	if (firstMouse)
-	{
-		lastX = (float)xPos;
-		lastY = (float)yPos;
-		firstMouse = false;
-	}
-
-	float xOffset = (float)xPos - lastX;
-	float yOffset = (float)yPos - lastY;
-	lastX = (float)xPos;
-	lastY = (float)yPos;
-
-	float sensitivity = 0.05f;
-	xOffset *= sensitivity;
-	yOffset *= sensitivity;
-
-	yaw -= xOffset;
-	pitch += yOffset;
-
-	if (pitch > 89.0f)
-		pitch = 89.0f;
-	if (pitch < -89.0f)
-		pitch = -89.0f;
-
-	vec3 forward = vec3();
-	forward.x = cosf(toRadians(yaw)) * cosf(toRadians(pitch));
-	forward.y = sinf(toRadians(pitch));
-	forward.z = sinf(toRadians(yaw)) * cosf(toRadians(pitch));
-	cameraForward = normalize(forward);
-}
-
 int main(int argc, const char** argv)
 {
     GLFWwindow* window;
@@ -85,7 +45,7 @@ int main(int argc, const char** argv)
 	shared_ptr<textureResource> texture(new textureResource("crateTexture.png"));
 	shared_ptr<shaderObject> shader(new shaderObject("test.shader"));
 
-	// setup graphicsNode
+	// setup graphicsNodes
 	graphicsNode node1(vec3(-0.1f, 0, -0.1f), mesh, texture, shader);
 	graphicsNode node2(vec3(1, 0, -0.1f), mesh, texture, shader);
 	graphicsNode node3(vec3(2.2f, 0, 0), mesh, texture, shader);
@@ -94,55 +54,28 @@ int main(int argc, const char** argv)
 	graphicsNode node6(vec3(-0.3f, 0, 1), mesh, texture, shader);
 
 	// setup camera
-	cameraObject camera = cameraObject(shader);
+	cameraObject camera = cameraObject(window, shader);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	// setup projection matrix
-	mat4 projectionMatrix = perspective(70, (float)width / (float)height, 0.1f, 50.0f);
-
-	// setup view matrix
-	const float cameraSpeed = 4;
-	vec3 eye = vec3();
-	vec3 up = vec3(0, 1, 0);
-
-	// camera
+	// setup delta time
 	float deltaTime = 0;
 	float lastFrame = 0;
-	vec3 cameraPos = vec3(1, -1, 6);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	glfwSetCursorPosCallback(window, mouse_callback);
 
     // render loop
     while (!glfwWindowShouldClose(window))
     {
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			glfwSetWindowShouldClose(window, true);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// update delta time
 		float currentFrame = (float)glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(window, true);
-
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			cameraPos += cameraForward * cameraSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			cameraPos -= cameraForward * cameraSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			cameraPos += normalize(cross(cameraForward, up)) * cameraSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			cameraPos -= normalize(cross(cameraForward, up)) * cameraSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-			cameraPos += up * cameraSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-			cameraPos -= up * cameraSpeed * deltaTime;
-
 		// update camera
-		mat4 viewMatrix = lookat(cameraPos, cameraPos + cameraForward, up);
-
-		int viewMatrixUniformLocation = glGetUniformLocation(shader->program, "viewMatrix");
-		int projectionMatrixUniformLocation = glGetUniformLocation(shader->program, "projectionMatrix");
-		glUniformMatrix4fv(viewMatrixUniformLocation, 1, 0, &viewMatrix[0][0]); 
-		glUniformMatrix4fv(projectionMatrixUniformLocation, 1, 0, &projectionMatrix[0][0]);
+		camera.update(deltaTime);
 
 		// draw
 		node1.draw();

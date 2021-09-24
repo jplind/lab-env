@@ -16,13 +16,13 @@ struct shaderObject
 {
 	GLuint program;
 
-	shaderObject(const string& filepath)
+	shaderObject(string const& filepath)
 	{
 		shaderProgramSource source = parseShaderFile(filepath);
 		createProgram(source.vertexSource, source.fragmentSource);
 	}
 
-	shaderProgramSource parseShaderFile(const string& filePath)
+	shaderProgramSource parseShaderFile(string const& filePath)
 	{
 		ifstream stream(filePath);
 		string line;
@@ -47,7 +47,7 @@ struct shaderObject
 		return shaderProgramSource{ ss[0].str(), ss[1].str() };
 	}
 
-	GLuint compileShader(GLuint type, const string& source)
+	GLuint compileShader(GLuint const& type, string const& source)
 	{
 		GLuint id = glCreateShader(type);
 		const char* src = source.c_str();
@@ -72,7 +72,7 @@ struct shaderObject
 		return id;
 	}
 
-	void createProgram(const string& vertexShader, const string& fragmentShader)
+	void createProgram(string const& vertexShader, string const& fragmentShader)
 	{
 		GLuint vs = compileShader(GL_VERTEX_SHADER, vertexShader);
 		GLuint fs = compileShader(GL_FRAGMENT_SHADER, fragmentShader);
