@@ -1,7 +1,7 @@
 #include "config.h"
 #include "render/window.h"
-#include "render/meshResource.h"
-#include "render/textureResource.h"
+#include "meshResource.h"
+#include "textureResource.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 

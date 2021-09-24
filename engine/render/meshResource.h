@@ -1,22 +1,21 @@
 #pragma once
 #include "math/math.h"
 
-struct vertex
-{
-	vec3 pos;
-	vec4 color;
-	vec2 uv;
-
-	vertex() : pos(vec3(0, 0, 0)), color(vec4(1, 1, 1, 1)), uv(vec2(0, 0)) {}
-	vertex(vec3 const& pos, vec4 const& color, vec2 const& uv) : pos(pos), color(color), uv(uv) {}
-};
-
 struct meshResource
 {
 	GLuint vertexArrayObject;
 	GLuint vertexBufferObject;
 	GLuint indexBufferObject;
 	uint32 drawCount;
+
+	struct vertex
+	{
+		vec3 pos;
+		vec2 uv;
+
+		vertex() : pos(vec3(0, 0, 0)), uv(vec2(0, 0)) {}
+		vertex(vec3 const& pos, vec2 const& uv) : pos(pos), uv(uv) {}
+	};
 
 	GLuint cubeIndices[36] = {
 		0, 1, 2, 0, 2, 3,
@@ -42,11 +41,9 @@ struct meshResource
 
 		// setup vertex attribute pointers
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float32) * 9, 0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float32) * 5, 0);
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float32) * 9, (GLvoid*)(sizeof(float32) * 3));
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float32) * 9, (GLvoid*)(sizeof(float32) * 7));
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float32) * 5, (GLvoid*)(sizeof(float32) * 3));
 
 		// setup index buffer object
 		glGenBuffers(1, &indexBufferObject);
@@ -57,49 +54,41 @@ struct meshResource
 		glBindVertexArray(0);
 	}
 
-	meshResource(vec3 pos, float size) : meshResource(generateCubeVertices(pos, size), 24, cubeIndices, 36) {}
+	meshResource(float size) : meshResource(generateCubeVertices(size), 24, cubeIndices, 36) {}
 
-	vertex* generateCubeVertices(vec3 pos, float size)
+	vertex* generateCubeVertices(float size)
 	{
-		// setup colors
-		vec4 red = vec4(0.6f, 0.2f, 0.2f, 1.0f);
-		vec4 green = vec4(0.2f, 0.6f, 0.2f, 1.0f);
-		vec4 blue = vec4(0.2f, 0.2f, 0.6f, 1.0f);
-		vec4 yellow = vec4(0.6f, 0.6f, 0.2f, 1.0f);
-		vec4 purple = vec4(0.6f, 0.2f, 0.6f, 1.0f);
-		vec4 teal = vec4(0.2f, 0.6f, 0.6f, 1.0f);
-
 		// setup cube vertices
 		vertex cubeVertices[24] = {
-		vertex(vec3(-1, -1, -1) * size + pos, red, vec2(0, 0)),
-		vertex(vec3(-1, 1, -1) * size + pos, red, vec2(0, 1)),
-		vertex(vec3(1, 1, -1) * size + pos, red, vec2(1, 1)),
-		vertex(vec3(1, -1, -1) * size + pos, red, vec2(1, 0)),
+		vertex(vec3(-1, -1, -1) * size, vec2(0, 0)),
+		vertex(vec3(-1, 1, -1) * size, vec2(0, 1)),
+		vertex(vec3(1, 1, -1) * size, vec2(1, 1)),
+		vertex(vec3(1, -1, -1) * size, vec2(1, 0)),
 
-		vertex(vec3(-1, -1, 1) * size + pos, green, vec2(0, 0)),
-		vertex(vec3(-1, 1, 1) * size + pos, green, vec2(0, 1)),
-		vertex(vec3(1, 1, 1) * size + pos, green, vec2(1, 1)),
-		vertex(vec3(1, -1, 1) * size + pos, green, vec2(1, 0)),
+		vertex(vec3(-1, -1, 1) * size, vec2(0, 0)),
+		vertex(vec3(-1, 1, 1) * size, vec2(0, 1)),
+		vertex(vec3(1, 1, 1) * size, vec2(1, 1)),
+		vertex(vec3(1, -1, 1) * size, vec2(1, 0)),
 
-		vertex(vec3(-1, -1, -1) * size + pos, blue, vec2(0, 0)),
-		vertex(vec3(-1, 1, -1) * size + pos, blue, vec2(0, 1)),
-		vertex(vec3(-1, 1, 1) * size + pos, blue, vec2(1, 1)),
-		vertex(vec3(-1, -1, 1) * size + pos, blue, vec2(1, 0)),
+		vertex(vec3(-1, -1, -1) * size, vec2(0, 0)),
+		vertex(vec3(-1, 1, -1) * size, vec2(0, 1)),
+		vertex(vec3(-1, 1, 1) * size, vec2(1, 1)),
+		vertex(vec3(-1, -1, 1) * size, vec2(1, 0)),
 
-		vertex(vec3(-1, 1, -1) * size + pos, yellow, vec2(0, 0)),
-		vertex(vec3(1, 1, -1) * size + pos, yellow, vec2(0, 1)),
-		vertex(vec3(1, 1, 1) * size + pos, yellow, vec2(1, 1)),
-		vertex(vec3(-1, 1, 1) * size + pos, yellow, vec2(1, 0)),
+		vertex(vec3(-1, 1, -1) * size, vec2(0, 0)),
+		vertex(vec3(1, 1, -1) * size, vec2(0, 1)),
+		vertex(vec3(1, 1, 1) * size, vec2(1, 1)),
+		vertex(vec3(-1, 1, 1) * size, vec2(1, 0)),
 
-		vertex(vec3(1, 1, -1) * size + pos, purple, vec2(0, 0)),
-		vertex(vec3(1, -1, -1) * size + pos, purple, vec2(0, 1)),
-		vertex(vec3(1, -1, 1) * size + pos, purple, vec2(1, 1)),
-		vertex(vec3(1, 1, 1) * size + pos, purple, vec2(1, 0)),
+		vertex(vec3(1, 1, -1) * size, vec2(0, 0)),
+		vertex(vec3(1, -1, -1) * size, vec2(0, 1)),
+		vertex(vec3(1, -1, 1) * size, vec2(1, 1)),
+		vertex(vec3(1, 1, 1) * size, vec2(1, 0)),
 
-		vertex(vec3(1, -1, -1) * size + pos, teal, vec2(0, 0)),
-		vertex(vec3(-1, -1, -1) * size + pos, teal, vec2(0, 1)),
-		vertex(vec3(-1, -1, 1) * size + pos, teal, vec2(1, 1)),
-		vertex(vec3(1, -1, 1) * size + pos, teal, vec2(1, 0))
+		vertex(vec3(1, -1, -1) * size, vec2(0, 0)),
+		vertex(vec3(-1, -1, -1) * size, vec2(0, 1)),
+		vertex(vec3(-1, -1, 1) * size, vec2(1, 1)),
+		vertex(vec3(1, -1, 1) * size, vec2(1, 0))
 		};
 
 		return cubeVertices;

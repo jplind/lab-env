@@ -6,6 +6,7 @@
 	(C) 2015-2020 Individual contributors, see AUTHORS file
 */
 //------------------------------------------------------------------------------
+#include "config.h"
 #include <functional>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>

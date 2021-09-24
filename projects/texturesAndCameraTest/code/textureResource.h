@@ -1,6 +1,6 @@
 #pragma once
 #include "render/window.h"
-#include "render/stb_image.h"
+#include "stb_image.h"
 
 struct textureResource
 {
