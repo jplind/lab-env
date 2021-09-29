@@ -1,0 +1,21 @@
+{
+    "env": {
+      "defaultIncludePath": ["${workspaceFolder}"]
+    },
+    "configurations": [
+      {
+        "name": "default",
+        "intelliSenseMode": "gcc-x64",
+        "includePath": [
+            "${defaultIncludePath}"
+        ],
+        "cppStandard": "c++17",
+        "browse": {
+          "path": ["${workspaceFolder}"],
+          "limitSymbolsToIncludedHeaders": true,
+          "databaseFilename": ""
+        }
+      }
+    ],
+    "version": 4
+  }

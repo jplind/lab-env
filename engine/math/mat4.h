@@ -189,7 +189,7 @@ mat4 rotationz(float const& rad)
 	return mat4(vec4(cosf(rad), sinf(rad), 0, 0), vec4(-sinf(rad), cosf(rad), 0, 0), vec4(0, 0, 1, 0), vec4(0, 0, 0, 1));
 }
 
-mat4 rotationaxis(vec3 const& vec, float const rad)
+mat4 rotationaxis(vec3 const& vec, float const& rad)
 {
 	vec3 nVec = normalize(vec);
 	float c = cosf(rad);
