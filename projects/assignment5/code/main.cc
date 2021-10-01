@@ -38,18 +38,21 @@ int main(int argc, const char** argv)
 	glDepthFunc(GL_LESS);
 
 	// setup shared resources
-	shared_ptr<meshResource> mesh1(new meshResource("../../../plane.obj"));
-	shared_ptr<meshResource> mesh2(new meshResource("../../../sofa.obj"));
-	shared_ptr<textureResource> texture1(new textureResource("../../../grunge2.jpg"));
-	shared_ptr<textureResource> texture2(new textureResource("../../../wool2.jpg"));
+	shared_ptr<meshResource> mesh1(new meshResource("../../../cube.obj"));
+	shared_ptr<meshResource> mesh2(new meshResource("../../../capsule.obj"));
+	shared_ptr<meshResource> mesh3(new meshResource("../../../statue.obj"));
+	shared_ptr<textureResource> texture1(new textureResource("../../../wall2.jpg"));
 	shared_ptr<shaderObject> shader(new shaderObject("../../../test.shader"));
 	
 	// setup graphicsNodes
-	graphicsNode node1(vec3(0, -0.1f, 0), mesh1, texture1, shader);
-	graphicsNode node2(vec3(0, 0, -1), mesh2, texture2, shader);
+	graphicsNode node1(vec3(3, 0, 3), mat4(), vec3(), 1, mesh1, texture1, shader);
+	graphicsNode node2(vec3(3, 0, -3), mat4(), vec3(0.5f, 0.7f, 0.11f), 1, mesh1, texture1, shader);
+	graphicsNode node3(vec3(-3, 0, -3), mat4(), vec3(), 1, mesh2, texture1, shader);
+	graphicsNode node4(vec3(-3, 0, 3), mat4(), vec3(0.5f, 0.7f, 0.11f), 1, mesh2, texture1, shader);
+	graphicsNode node5(vec3(0, -2, 0), mat4(rotationx(-PI / 2)), vec3(0, 0, 0.5f), 0.02, mesh3, texture1, shader);
 
 	// setup camera
-	cameraObject camera = cameraObject(window, shader, vec3(0, 1, 3), width, height);
+	cameraObject camera = cameraObject(window, shader, vec3(0, 2, 10), width, height);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// setup delta time
@@ -57,14 +60,22 @@ int main(int argc, const char** argv)
 	float lastFrame = 0;
 
 	// setup light
-	lightPoint light = lightPoint(vec3(0, 4, 0), vec3(1, 1, 1), 20);
 	shader->use();
+	lightPoint light1 = lightPoint(vec3(0, 5, 5), vec3(1, 1, 1), 25);
 	int lightPosUniformLocation = glGetUniformLocation(shader->program, "lightPos");
-	glUniform3fv(lightPosUniformLocation, 1, &light.position[0]);
+	glUniform3fv(lightPosUniformLocation, 1, &light1.position[0]);
 	int lightColorUniformLocation = glGetUniformLocation(shader->program, "lightColor");
-	glUniform3fv(lightColorUniformLocation, 1, &light.color[0]);
+	glUniform3fv(lightColorUniformLocation, 1, &light1.color[0]);
 	int lightIntensityUniformLocation = glGetUniformLocation(shader->program, "lightIntensity");
-	glUniform1f(lightIntensityUniformLocation, light.intensity);
+	glUniform1f(lightIntensityUniformLocation, light1.intensity);
+
+	lightPoint light2 = lightPoint(vec3(0, 5, -5), vec3(0.5f, 1, 1), 25);
+	int lightPos2UniformLocation = glGetUniformLocation(shader->program, "lightPos2");
+	glUniform3fv(lightPos2UniformLocation, 1, &light2.position[0]);
+	int lightColor2UniformLocation = glGetUniformLocation(shader->program, "lightColor2");
+	glUniform3fv(lightColor2UniformLocation, 1, &light2.color[0]);
+	int lightIntensity2UniformLocation = glGetUniformLocation(shader->program, "lightIntensity2");
+	glUniform1f(lightIntensity2UniformLocation, light2.intensity);
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -86,6 +97,9 @@ int main(int argc, const char** argv)
 		// draw
 		node1.draw();
 		node2.draw();
+		node3.draw();
+		node4.draw();
+		node5.draw();
 
         // swap front and back buffers
         glfwSwapBuffers(window);

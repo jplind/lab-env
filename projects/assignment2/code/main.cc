@@ -11,11 +11,14 @@ main(int argc, const char** argv)
 	"layout(location=1) in vec4 color;\n"
 	"layout(location=0) out vec4 Color;\n"
 	"uniform mat4 modelTransformMatrix;\n"
-	"uniform mat4 viewProjectionMatrix;\n"
+	"uniform mat4 viewMatrix;\n"
+	"uniform mat4 projectionMatrix;\n"
+
 	"void main()\n"
 	"{\n"
 	"	gl_Position = vec4(pos, 1);\n"
-	"	gl_Position = viewProjectionMatrix * modelTransformMatrix * gl_Position;\n"
+	"	mat4 MVP =  projectionMatrix * viewMatrix * modelTransformMatrix;\n"
+	"	gl_Position = MVP * gl_Position;\n"
 
 	"	Color = color;\n"
 	"}\n";
@@ -129,7 +132,7 @@ main(int argc, const char** argv)
 		float timeValue = float(glfwGetTime());
 		mat4 translationMatrix = mat4(vec4(1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, 1, 0), vec4(sinf(timeValue) * 0.25f, 0, 0, 1));
 		mat4 rotationMatrix = rotationx(timeValue * 0.1f) * rotationy(timeValue * 0.12f) * rotationz(timeValue * 0.07f);
-		mat4 modelTransformMatrix = mat4(vec4(1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, 1, 0), vec4(0, 0, 0, 1));
+		mat4 modelTransformMatrix = mat4();
 		int modelTransformMatrixUniformLocation = glGetUniformLocation(program, "modelTransformMatrix");
 		glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, 0, &modelTransformMatrix[0][0]);
 
@@ -138,12 +141,13 @@ main(int argc, const char** argv)
 		const vec3 at = vec3(1, 0, 1);
 		const vec3 eye = vec3(sinf(timeValue * speed) * distance, 1, cosf(timeValue * speed) * distance);
 		const vec3 up = vec3(0, 1, 0);
+		mat4 viewMatrix = lookat(eye, at, up);
+		int viewMatrixUniformLocation = glGetUniformLocation(program, "viewMatrix");
+		glUniformMatrix4fv(viewMatrixUniformLocation, 1, 0, &viewMatrix[0][0]);
 
-		mat4 viewMatrix = perspective(70, (float)width / (float)height, 0.1f, 50.0f);
-		mat4 projectionMatrix = lookat(eye, at, up);
-		mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
-		int viewProjectionMatrixUniformLocation = glGetUniformLocation(program, "viewProjectionMatrix");
-		glUniformMatrix4fv(viewProjectionMatrixUniformLocation, 1, 0, &viewProjectionMatrix[0][0]);
+		mat4 projectionMatrix = perspective(70, (float)width / (float)height, 0.1f, 50.0f);
+		int projectionMatrixUniformLocation = glGetUniformLocation(program, "projectionMatrix");
+		glUniformMatrix4fv(projectionMatrixUniformLocation, 1, 0, &projectionMatrix[0][0]);
 
         // swap front and back buffers
         glfwSwapBuffers(window);

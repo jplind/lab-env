@@ -7,12 +7,15 @@
 struct graphicsNode
 {
 	vec3 transform;
+	mat4 rotation;
+	vec3 rotationSpeed;
+	float scale = 1;
 	shared_ptr<meshResource> mesh;
 	shared_ptr<textureResource> texture;
 	shared_ptr<shaderObject> shader;
 
-	graphicsNode(vec3 const& pos, shared_ptr<meshResource> mesh, shared_ptr<textureResource> texture, shared_ptr<shaderObject> shader)
-		: transform(pos), mesh(mesh), texture(texture), shader(shader) {}
+	graphicsNode(vec3 const& pos, mat4 const& rotation, vec3 const& rotationSpeed, float const& scale, shared_ptr<meshResource> mesh, shared_ptr<textureResource> texture, shared_ptr<shaderObject> shader)
+		: transform(pos), rotation(rotation), rotationSpeed(rotationSpeed), scale(scale), mesh(mesh), texture(texture), shader(shader) {}
 
 	void draw()
 	{
@@ -28,7 +31,9 @@ struct graphicsNode
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		// apply transform
-		mat4 modelTransformMatrix = mat4(vec4(1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, 1, 0), vec4(transform.x, transform.y, transform.z, 1));
+		float timeValue = (float)glfwGetTime();
+		mat4 rotationMatrix = rotationx(rotationSpeed.x * timeValue) * rotationy(rotationSpeed.y * timeValue) * rotationz(rotationSpeed.z * timeValue) * rotation;
+		mat4 modelTransformMatrix = rotationMatrix * mat4(vec4(scale, 0, 0, 0), vec4(0, scale, 0, 0), vec4(0, 0, scale, 0), vec4(transform.x, transform.y, transform.z, 1));
 		int modelTransformMatrixUniformLocation = glGetUniformLocation(shader->program, "modelTransformMatrix");
 		glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, 0, &modelTransformMatrix[0][0]);
 		
