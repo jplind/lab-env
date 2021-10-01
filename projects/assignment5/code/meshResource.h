@@ -30,15 +30,15 @@ struct meshResource
 	// construction from OBJ file
 	meshResource(string const& filePath)
 	{
-		// individual OBJ attributes
+		// vertex data
 		vector<vec3> positions;
 		vector<vec2> textureCoordinates;
 		vector<vec3> normals;
 
-		// faces stored as index vector keys
-		map<ivec3, int> ivIndices;
+		// map for indexing each unique vertex
+		map<ivec3, int> vertexIndices;
 
-		// final vertices and indices
+		// final vertices and indices, used later to setup buffers
 		vector<vertex> vertices;
 		vector<GLint> indices;
 
@@ -91,7 +91,7 @@ struct meshResource
 
 				for (int i = 0; i < lineElements.size(); i++)
 				{
-					// create index vector from element
+					// create vertex index vector from line element
 					ivec3 iv = ivec3();
 					ss.clear();
 					ss.str(lineElements[i]);
@@ -101,16 +101,16 @@ struct meshResource
 					ss.ignore(1, '/');
 					ss >> iv.z;
 
-					// triangulate quad if four elements
+					// triangulate if fourth element
 					if (i == 3)
 					{
 						indices.push_back(firstElementIndex);
 						indices.push_back(thirdElementIndex);
 					}
 
-					// check dictionary, create new vertex only if needed, store first and third for triangulation
-					auto item = ivIndices.find(iv);
-					if (item == ivIndices.end())
+					// check dictionary, create new vertex if needed, store first and third for triangulation
+					auto item = vertexIndices.find(iv);
+					if (item == vertexIndices.end())
 					{
 						if (i == 0)
 							firstElementIndex = indexCount;
@@ -118,8 +118,8 @@ struct meshResource
 							thirdElementIndex = indexCount;
 
 						indices.push_back(indexCount);
-						ivIndices[iv] = indexCount++;
-						vertices.push_back(vertex(positions[iv.x - 1], textureCoordinates[iv.y - 1], normals[iv.z - 1]));
+						vertexIndices[iv] = indexCount++;
+						vertices.push_back(vertex(positions[(size_t)(iv.x - 1)], textureCoordinates[(size_t)(iv.y - 1)], normals[(size_t)(iv.z - 1)]));
 					}
 					else
 					{
@@ -133,22 +133,6 @@ struct meshResource
 				}
 			}
 		}
-		/*for ( const auto& index : faceIndices)
-				{
-					ss.clear();
-					ss.str(index);
-					ss >> tempGLint;
-					positionIndices.push_back(tempGLint);
-					ss.ignore(1, '/');
-					ss >> tempGLint;
-					textureCoordinateIndices.push_back(tempGLint);
-					ss.ignore(1, '/');
-					ss >> tempGLint;
-					normalIndices.push_back(tempGLint);
-				}*/
-		// create final vertex array
-		//for (size_t i = 0; i < positionIndices.size(); i++)
-		//	vertices.push_back(vertex(positions[positionIndices[i] - (size_t)1], textureCoordinates[textureCoordinateIndices[i] - (size_t)1], normals[normalIndices[i] - (size_t)1]));
 
 		drawCount = (int)indices.size();
 
@@ -178,45 +162,10 @@ struct meshResource
 		glBindVertexArray(0);
 	}
 
-	meshResource(vertex* const vertices, uint32 const& numVertices, GLuint* const indices, uint32 const& numIndices) 
-	{
-		drawCount = numIndices;
-
-		// setup vertex array object
-		glGenVertexArrays(1, &vertexArrayObject);
-		glBindVertexArray(vertexArrayObject);
-
-		// setup vertex buffer object
-		glGenBuffers(1, &vertexBufferObject);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(vertices[0]), vertices, GL_STATIC_DRAW);
-
-		// setup vertex attribute pointers
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float32) * 5, 0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float32) * 5, (GLvoid*)(sizeof(float32) * 3));
-
-		// setup index buffer object
-		glGenBuffers(1, &indexBufferObject);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferObject);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(indices[0]), indices, GL_STATIC_DRAW);
-
-		// unbind vertex array object
-		glBindVertexArray(0);
-	}
-
 	~meshResource()
 	{
 		glDeleteBuffers(1, &vertexBufferObject);
 		glDeleteBuffers(1, &indexBufferObject);
 		glDeleteVertexArrays(1, &vertexArrayObject);
-	}
-
-	vector<string> splitString(string const& ss)
-	{
-		vector<string> faces;
-		faces.push_back(ss);
-		return faces;
 	}
 };

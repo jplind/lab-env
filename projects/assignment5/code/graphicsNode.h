@@ -9,7 +9,7 @@ struct graphicsNode
 	vec3 transform;
 	mat4 rotation;
 	vec3 rotationSpeed;
-	float scale = 1;
+	float scale;
 	shared_ptr<meshResource> mesh;
 	shared_ptr<textureResource> texture;
 	shared_ptr<shaderObject> shader;

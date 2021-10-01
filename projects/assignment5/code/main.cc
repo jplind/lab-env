@@ -42,7 +42,7 @@ int main(int argc, const char** argv)
 	shared_ptr<meshResource> mesh2(new meshResource("../../../capsule.obj"));
 	shared_ptr<meshResource> mesh3(new meshResource("../../../statue.obj"));
 	shared_ptr<textureResource> texture1(new textureResource("../../../wall2.jpg"));
-	shared_ptr<shaderObject> shader(new shaderObject("../../../test.shader"));
+	shared_ptr<shaderObject> shader(new shaderObject("../../../blinnPhong.shader"));
 	
 	// setup graphicsNodes
 	graphicsNode node1(vec3(3, 0, 3), mat4(), vec3(), 1, mesh1, texture1, shader);
@@ -55,10 +55,6 @@ int main(int argc, const char** argv)
 	cameraObject camera = cameraObject(window, shader, vec3(0, 2, 10), width, height);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	// setup delta time
-	float deltaTime = 0;
-	float lastFrame = 0;
-
 	// setup light
 	shader->use();
 	lightPoint light1 = lightPoint(vec3(0, 5, 5), vec3(1, 1, 1), 25);
@@ -69,13 +65,17 @@ int main(int argc, const char** argv)
 	int lightIntensityUniformLocation = glGetUniformLocation(shader->program, "lightIntensity");
 	glUniform1f(lightIntensityUniformLocation, light1.intensity);
 
-	lightPoint light2 = lightPoint(vec3(0, 5, -5), vec3(0.5f, 1, 1), 25);
+	lightPoint light2 = lightPoint(vec3(0, 5, -5), vec3(0.2f, 1, 1), 25);
 	int lightPos2UniformLocation = glGetUniformLocation(shader->program, "lightPos2");
 	glUniform3fv(lightPos2UniformLocation, 1, &light2.position[0]);
 	int lightColor2UniformLocation = glGetUniformLocation(shader->program, "lightColor2");
 	glUniform3fv(lightColor2UniformLocation, 1, &light2.color[0]);
 	int lightIntensity2UniformLocation = glGetUniformLocation(shader->program, "lightIntensity2");
 	glUniform1f(lightIntensity2UniformLocation, light2.intensity);
+
+	// setup delta time
+	float deltaTime = 0;
+	float lastFrame = 0;
 
     // render loop
     while (!glfwWindowShouldClose(window))
