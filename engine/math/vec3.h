@@ -49,14 +49,14 @@ struct vec3
 		z -= vec.z;
 	}
 
-	void operator*=(float const scalar)
+	void operator*=(float const& scalar)
 	{
 		x *= scalar;
 		y *= scalar;
 		z *= scalar;
 	}
 
-	vec3 operator*(float const scalar)
+	vec3 operator*(float const& scalar)
 	{
 		return vec3(x * scalar, y * scalar, z * scalar);
 	}
@@ -71,7 +71,7 @@ struct vec3
 		return x != vec.x || y != vec.y || z != vec.z;
 	}
 
-	float& operator[](uint32 const i)
+	float& operator[](uint32 const& i)
 	{
 		assert(i >= 0 && i < 3);
 

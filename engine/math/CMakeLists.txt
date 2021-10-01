@@ -5,6 +5,7 @@
 SET(files_math
 	vec2.h
 	vec3.h
+	ivec3.h
 	vec4.h
 	mat4.h
 	math.h

@@ -33,8 +33,7 @@ struct graphicsNode
 		glUniformMatrix4fv(modelTransformMatrixUniformLocation, 1, 0, &modelTransformMatrix[0][0]);
 		
 		// render
-		//glDrawElements(GL_TRIANGLES, mesh->drawCount, GL_UNSIGNED_INT, NULL);
-		mesh->draw();
+		glDrawElements(GL_TRIANGLES, mesh->drawCount, GL_UNSIGNED_INT, NULL);
 
 		// unbind
 		glBindVertexArray(0);

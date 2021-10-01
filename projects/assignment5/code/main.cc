@@ -38,17 +38,18 @@ int main(int argc, const char** argv)
 	glDepthFunc(GL_LESS);
 
 	// setup shared resources
-	shared_ptr<meshResource> mesh1(new meshResource("../../../example.obj"));
-	shared_ptr<meshResource> mesh2(new meshResource("../../../capsule.obj"));
-	shared_ptr<textureResource> texture(new textureResource("../../../wall2.jpg"));
+	shared_ptr<meshResource> mesh1(new meshResource("../../../plane.obj"));
+	shared_ptr<meshResource> mesh2(new meshResource("../../../sofa.obj"));
+	shared_ptr<textureResource> texture1(new textureResource("../../../grunge2.jpg"));
+	shared_ptr<textureResource> texture2(new textureResource("../../../wool2.jpg"));
 	shared_ptr<shaderObject> shader(new shaderObject("../../../test.shader"));
 	
 	// setup graphicsNodes
-	graphicsNode node1(vec3(2, 0, 2), mesh1, texture, shader);
-	graphicsNode node2(vec3(-2, 0, -2), mesh2, texture, shader);
+	graphicsNode node1(vec3(0, -0.1f, 0), mesh1, texture1, shader);
+	graphicsNode node2(vec3(0, 0, -1), mesh2, texture2, shader);
 
 	// setup camera
-	cameraObject camera = cameraObject(window, shader, vec3(0, 2, 12), width, height);
+	cameraObject camera = cameraObject(window, shader, vec3(0, 1, 3), width, height);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// setup delta time
@@ -56,12 +57,14 @@ int main(int argc, const char** argv)
 	float lastFrame = 0;
 
 	// setup light
-	lightPoint light = lightPoint(vec3(0, 4, 0), vec3(1, 1, 1), 1);
+	lightPoint light = lightPoint(vec3(0, 4, 0), vec3(1, 1, 1), 20);
 	shader->use();
 	int lightPosUniformLocation = glGetUniformLocation(shader->program, "lightPos");
 	glUniform3fv(lightPosUniformLocation, 1, &light.position[0]);
 	int lightColorUniformLocation = glGetUniformLocation(shader->program, "lightColor");
 	glUniform3fv(lightColorUniformLocation, 1, &light.color[0]);
+	int lightIntensityUniformLocation = glGetUniformLocation(shader->program, "lightIntensity");
+	glUniform1f(lightIntensityUniformLocation, light.intensity);
 
     // render loop
     while (!glfwWindowShouldClose(window))

@@ -12,11 +12,6 @@ using namespace std;
 
 struct meshResource
 {
-	GLuint vertexArrayObject;
-	GLuint vertexBufferObject;
-	GLuint indexBufferObject;
-	uint32 drawCount;
-
 	struct vertex
 	{
 		vec3 position;
@@ -27,17 +22,25 @@ struct meshResource
 		vertex(vec3 const& position, vec2 const& textureCoordinates, vec3 const& normal) : position(position), textureCoordinates(textureCoordinates), normal(normal) {}
 	};
 
+	GLuint vertexArrayObject;
+	GLuint vertexBufferObject;
+	GLuint indexBufferObject;
+	uint32 drawCount;
+
+	// construction from OBJ file
 	meshResource(string const& filePath)
 	{
+		// individual OBJ attributes
 		vector<vec3> positions;
 		vector<vec2> textureCoordinates;
 		vector<vec3> normals;
 
-		vector<int> positionIndices;
-		vector<int> textureCoordinateIndices;
-		vector<int> normalIndices;
+		// faces stored as index vector keys
+		map<ivec3, int> ivIndices;
 
+		// final vertices and indices
 		vector<vertex> vertices;
+		vector<GLint> indices;
 
 		ifstream stream = ifstream(filePath);
 		if (!stream)
@@ -51,7 +54,7 @@ struct meshResource
 		string prefix;
 		vec3 tempVec3 = vec3();
 		vec2 tempVec2 = vec2();
-		GLint tempGLint = 0;
+		int indexCount = 0;
 
 		while (getline(stream, line))
 		{
@@ -76,42 +79,78 @@ struct meshResource
 			}
 			else if (prefix == "f")
 			{
-				int counter = 0;
-				while (ss >> tempGLint)
+				// split line into elements
+				vector<string> lineElements;
+				string str;
+				while (ss >> str)
+					lineElements.push_back(str);
+
+				// setup for quad triangulation
+				int firstElementIndex;
+				int thirdElementIndex;
+
+				for (int i = 0; i < lineElements.size(); i++)
 				{
-					if (counter == 0)
-						positionIndices.push_back(tempGLint);
-					else if (counter == 1)
-						textureCoordinateIndices.push_back(tempGLint);
-					else if (counter == 2)
-						normalIndices.push_back(tempGLint);
+					// create index vector from element
+					ivec3 iv = ivec3();
+					ss.clear();
+					ss.str(lineElements[i]);
+					ss >> iv.x;
+					ss.ignore(1, '/');
+					ss >> iv.y;
+					ss.ignore(1, '/');
+					ss >> iv.z;
 
-					if (ss.peek() == '/')
+					// triangulate quad if four elements
+					if (i == 3)
 					{
-						counter++;
-						ss.ignore(1, '/');
-					}
-					else if (ss.peek() == ' ')
-					{
-						counter++;
-						ss.ignore(1, ' ');
+						indices.push_back(firstElementIndex);
+						indices.push_back(thirdElementIndex);
 					}
 
-					if (counter > 2)
-						counter = 0;
+					// check dictionary, create new vertex only if needed, store first and third for triangulation
+					auto item = ivIndices.find(iv);
+					if (item == ivIndices.end())
+					{
+						if (i == 0)
+							firstElementIndex = indexCount;
+						else if (i == 2)
+							thirdElementIndex = indexCount;
+
+						indices.push_back(indexCount);
+						ivIndices[iv] = indexCount++;
+						vertices.push_back(vertex(positions[iv.x - 1], textureCoordinates[iv.y - 1], normals[iv.z - 1]));
+					}
+					else
+					{
+						if (i == 0)
+							firstElementIndex = item->second;
+						else if (i == 2)
+							thirdElementIndex = item->second;
+
+						indices.push_back(item->second);
+					}
 				}
 			}
 		}
-
-		// create index map
-		map<vec3, int> vertexIndices;
-
-
+		/*for ( const auto& index : faceIndices)
+				{
+					ss.clear();
+					ss.str(index);
+					ss >> tempGLint;
+					positionIndices.push_back(tempGLint);
+					ss.ignore(1, '/');
+					ss >> tempGLint;
+					textureCoordinateIndices.push_back(tempGLint);
+					ss.ignore(1, '/');
+					ss >> tempGLint;
+					normalIndices.push_back(tempGLint);
+				}*/
 		// create final vertex array
-		for (size_t i = 0; i < positionIndices.size(); i++)
-			vertices.push_back(vertex(positions[positionIndices[i] - (size_t)1], textureCoordinates[textureCoordinateIndices[i] - (size_t)1], normals[normalIndices[i] - (size_t)1]));
+		//for (size_t i = 0; i < positionIndices.size(); i++)
+		//	vertices.push_back(vertex(positions[positionIndices[i] - (size_t)1], textureCoordinates[textureCoordinateIndices[i] - (size_t)1], normals[normalIndices[i] - (size_t)1]));
 
-		drawCount = vertices.size();
+		drawCount = (int)indices.size();
 
 		// setup vertex array object
 		glGenVertexArrays(1, &vertexArrayObject);
@@ -131,6 +170,9 @@ struct meshResource
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float32) * 8, (GLvoid*)(sizeof(float32) * 5));
 
 		// setup index buffer object
+		glGenBuffers(1, &indexBufferObject);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferObject);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), &indices[0], GL_STATIC_DRAW);
 
 		// unbind vertex array object
 		glBindVertexArray(0);
@@ -171,11 +213,10 @@ struct meshResource
 		glDeleteVertexArrays(1, &vertexArrayObject);
 	}
 
-	void draw()
+	vector<string> splitString(string const& ss)
 	{
-		glBindVertexArray(vertexArrayObject);
-		//glDrawElements(GL_TRIANGLES, drawCount, GL_UNSIGNED_INT, NULL);
-		glDrawArrays(GL_TRIANGLES, 0, drawCount);
-		glBindVertexArray(0);
+		vector<string> faces;
+		faces.push_back(ss);
+		return faces;
 	}
 };

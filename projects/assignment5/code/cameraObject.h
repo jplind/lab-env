@@ -12,7 +12,7 @@ struct cameraObject
 	int width;
 	int height;
 
-	mat4 projectionMatrix = perspective(70, (float)width / (float)height, 0.1f, 50.0f);
+	mat4 projectionMatrix = perspective(70, (float)width / (float)height, 0.1f, 100.0f);
 
 	// mouselook variables
 	float yaw = -90;

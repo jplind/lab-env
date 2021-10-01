@@ -30,10 +30,11 @@ out vec4 Color;
 uniform sampler2D myTextureSampler;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
+uniform float lightIntensity;
 uniform vec3 cameraPos;
 void main()
 {
-	float ambient = 0.1f;
+	float ambient = 0.15f;
 	vec3 normal = normalize(Normal);
 	vec3 lightDirection = normalize(lightPos - currentPos);
 	float diffuse = max(dot(normal, lightDirection), 0.0f);
@@ -44,5 +45,8 @@ void main()
 	float specularAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 25);
 	float specular = specularAmount * specularLight;
 
-	Color = texture(myTextureSampler, UV) * vec4(lightColor, 1) * (diffuse + ambient + specular);
+	float distance = distance(lightPos, currentPos);
+	float attenuation = clamp(lightIntensity / (distance * distance), 0.0f, 1.0f);
+
+	Color = texture(myTextureSampler, UV) * vec4(lightColor, 1) * (diffuse + ambient + specular) * attenuation;
 };
