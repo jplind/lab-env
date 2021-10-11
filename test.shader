@@ -19,8 +19,6 @@ void main()
 #shader fragment
 #version 430
 in vec2 UV;
-in vec3 Normal;
-in vec3 currentPos;
 out vec4 Color;
 uniform sampler2D myTextureSampler;
 void main()

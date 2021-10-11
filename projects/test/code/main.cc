@@ -8,27 +8,27 @@
 
 int main(int argc, const char** argv)
 {
-	GLFWwindow* window;
+    GLFWwindow* window;
 	int width = 800;
 	int height = 600;
 
 	if (!glfwInit())
 		return -1;
 
-	// create window
-	window = glfwCreateWindow(width, height, "Lighting and OBJs", NULL, NULL);
-	if (!window)
-	{
-		glfwTerminate();
-		return -1;
-	}
+    // create window
+    window = glfwCreateWindow(width, height, "Lighting and OBJs", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
 
-	// make the window's context current
-	glfwMakeContextCurrent(window);
+    // make the window's context current
+    glfwMakeContextCurrent(window);
 
 	// glew init
-	glewExperimental = GL_TRUE;
-	glewInit();
+    glewExperimental = GL_TRUE;
+    glewInit();
 
 	// setup z buffer
 	glEnable(GL_DEPTH_TEST);
@@ -42,7 +42,7 @@ int main(int argc, const char** argv)
 	shared_ptr<shaderObject> shader(new shaderObject("../../../blinnPhong.shader"));
 	shared_ptr<shaderObject> testShader(new shaderObject("../../../test.shader"));
 
-
+	
 	// setup graphicsNodes
 	graphicsNode node1(vec3(3, 0, 3), mat4(), vec3(), 1, mesh1, texture1, shader);
 	graphicsNode node2(vec3(3, 0, -3), mat4(), vec3(0.5f, 0.7f, 0.11f), 1, mesh1, texture1, shader);
@@ -175,9 +175,9 @@ int main(int argc, const char** argv)
 
 	graphicsNode node6(vec3(3, 0, 3), mat4(), vec3(), 1, mesh1, texture1, testShader);
 
-	// render loop
-	while (!glfwWindowShouldClose(window))
-	{
+    // render loop
+    while (!glfwWindowShouldClose(window))
+    {
 		// press esc to terminate
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
@@ -217,13 +217,13 @@ int main(int argc, const char** argv)
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
 		glBindVertexArray(0);
 
-		// swap front and back buffers
-		glfwSwapBuffers(window);
+        // swap front and back buffers
+        glfwSwapBuffers(window);
 
-		// poll for and process events
-		glfwPollEvents();
-	}
+        // poll for and process events
+        glfwPollEvents();
+    }
 
-	glfwTerminate();
-	return 0;
+    glfwTerminate();
+    return 0;
 }

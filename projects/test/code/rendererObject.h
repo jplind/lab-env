@@ -27,5 +27,5 @@ This should use the vertex and pixel shaders that has previously been set up.
 
 struct rendererObject
 {
-
+	
 };
