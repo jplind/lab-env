@@ -6,19 +6,17 @@ out vec2 TexCoords;
 
 void main()
 {
-	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+	gl_Position = vec4(aPos, 1);
 	TexCoords = aTexCoords;
 };
 
 #shader fragment
 #version 430
-out vec4 FragColor;
-  
 in vec2 TexCoords;
-
-uniform sampler2D screenTexture;
+out vec4 FragColor;
+uniform sampler2D myTextureSampler;
 
 void main()
 { 
-	FragColor = 1 - texture(screenTexture, TexCoords);
+	FragColor = texture(myTextureSampler, TexCoords);
 };
