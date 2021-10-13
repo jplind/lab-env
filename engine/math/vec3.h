@@ -10,7 +10,7 @@ struct vec3
 	float z;
 
 	vec3() : x(0), y(0), z(0) {}
-	vec3(float const x, float const y, float const z) : x(x), y(y), z(z) {}
+	vec3(float const& x, float const& y, float const& z) : x(x), y(y), z(z) {}
 	vec3(vec3 const& vec) : x(vec.x), y(vec.y), z(vec.z) {}
 
 	void operator=(vec3 const& vec)

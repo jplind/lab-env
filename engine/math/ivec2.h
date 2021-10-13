@@ -7,10 +7,9 @@ struct ivec2
 {
 	int x;
 	int y;
-	int z;
 
 	ivec2() : x(0), y(0) {}
-	ivec2(int const x, int const y ) : x(x), y(y) {}
+	ivec2(int const& x, int const& y ) : x(x), y(y) {}
 	ivec2(ivec2 const& vec) : x(vec.x), y(vec.y) {}
 
 	void operator=(ivec2 const& vec)

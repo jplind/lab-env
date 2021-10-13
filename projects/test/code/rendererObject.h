@@ -35,7 +35,13 @@ struct rendererObject
 	unsigned int framebufferObject;
 	unsigned int textureColorbuffer;
 	unsigned int quadVertexArrayObject;
-	vec3* pixels = new vec3[(long)width * (long)height];
+	vec3* pixels = new vec3[(long long)width * (long long)height];
+
+	vec3 eye = vec3(0, 0, 0.5f);
+	vec3 lookatDirection = vec3(0, 0, -1);
+	vec3 up = vec3(0, 1, 0);
+	mat4 viewMatrix = lookat(eye, eye + lookatDirection, up);
+	mat4 projectionMatrix = perspective(70, (float)width / (float)height, 0.1f, 100.0f);
 
 	struct model
 	{
@@ -43,10 +49,17 @@ struct rendererObject
 		int drawCount = 0;
 		vertex* vertices = nullptr;
 		int* indices = nullptr;
+		mat4 rotation = mat4();
 
 		model() {};
 		model(unsigned int const& vertexArrayObject, int const& drawCount, vertex* const& vertices, int* const& indices)
 			: vertexArrayObject(vertexArrayObject), drawCount(drawCount), vertices(vertices), indices(indices) {}
+
+		void rotate()
+		{
+			float deltaTime = (float)glfwGetTime();
+			rotation = rotationy(deltaTime * 0.13f) * rotationy(deltaTime * 0.17f) * rotationz(deltaTime * 0.23f) * rotation;
+		}
 	};
 
 	map<int, model> models;
@@ -54,7 +67,7 @@ struct rendererObject
 
 	rendererObject(int const& width, int const& height) : width(width), height(height)
 	{
-		std::fill(pixels, pixels + width * height, vec3(0, 0, 0));
+		std::fill(pixels, pixels + (long long)width * (long long)height, vec3(0, 0, 0));
 		setupFullscreenQuad();
 		setupFramebufferObject();
 	}
@@ -154,8 +167,17 @@ struct rendererObject
 		return modelID;
 	}
 
+	void printMatrix(mat4 m)
+	{
+		cout << m[0].x << "   " << m[0].y << "   " << m[0].z << "   " << m[0].w << endl;
+		cout << m[1].x << "   " << m[1].y << "   " << m[1].z << "   " << m[1].w << endl;
+		cout << m[2].x << "   " << m[2].y << "   " << m[2].z << "   " << m[2].w << endl;
+		cout << m[3].x << "   " << m[3].y << "   " << m[3].z << "   " << m[3].w << endl;
+	}
+
 	void renderToFramebuffer(int const& model)
 	{
+		std::fill(pixels, pixels + (long long)width * (long long)height, vec3(0, 0, 0));
 		glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -163,13 +185,25 @@ struct rendererObject
 		/*glBindVertexArray(models[model].vertexArrayObject);
 		glDrawElements(GL_TRIANGLES, models[model].drawCount, GL_UNSIGNED_INT, NULL);*/
 
+		auto m = models[model];
+		m.rotate();
+		mat4 MVP = constructMVP(m);
+
 		vertex a = models[model].vertices[0];
 		vertex b = models[model].vertices[1];
 		vertex c = models[model].vertices[2];
-		rasterizeTriangle(a, b, c);
+
+		rasterizeTriangle(MVP, a, b, c);
 
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
+	}
+
+	mat4 constructMVP(model const& m)
+	{
+		mat4 modelTransformMatrix = m.rotation;
+		return modelTransformMatrix * viewMatrix * projectionMatrix;
+		//return projectionMatrix * viewMatrix * modelTransformMatrix;
 	}
 
 	void renderFramebufferToScreen()
@@ -183,12 +217,38 @@ struct rendererObject
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
-	void rasterizeTriangle(vertex a, vertex b, vertex c)
+	void rasterizeTriangle(mat4 const& MVP, vertex& a, vertex& b, vertex& c)
 	{
-		ivec2 aPosition = toPixelPosition(a.position);
-		ivec2 bPosition = toPixelPosition(b.position);
-		ivec2 cPosition = toPixelPosition(c.position);
+		vec4 rotatedPosition = MVP * vec4(a.position.x, a.position.y, a.position.z, 1);
+		vec3 aPos = vec3(rotatedPosition.x / rotatedPosition.w, rotatedPosition.y / rotatedPosition.w, rotatedPosition.z / rotatedPosition.w);
 
+		rotatedPosition = MVP * vec4(b.position.x, b.position.y, b.position.z, 1);
+		vec3 bPos = vec3(rotatedPosition.x / rotatedPosition.w, rotatedPosition.y / rotatedPosition.w, rotatedPosition.z / rotatedPosition.w);
+
+		rotatedPosition = MVP * vec4(c.position.x, c.position.y, c.position.z, 1);
+		vec3 cPos = vec3(rotatedPosition.x / rotatedPosition.w, rotatedPosition.y / rotatedPosition.w, rotatedPosition.z / rotatedPosition.w);
+
+		ivec2 aPosition = toPixelPosition(aPos);
+		ivec2 bPosition = toPixelPosition(bPos);
+		ivec2 cPosition = toPixelPosition(cPos);
+
+		drawLine(aPosition, bPosition);
+		drawLine(bPosition, cPosition);
+		drawLine(cPosition, aPosition);
+	}
+
+	void setPixel(ivec2 const& pixelPosition, vec3 const& color)
+	{	
+		pixels[pixelPosition.y * width + pixelPosition.x] = color;
+	}
+
+	ivec2 toPixelPosition(vec3 const& position)
+	{
+		return ivec2((position.x + 1) * 0.5f * width, (position.y + 1) * 0.5f * height);
+	}
+
+	void testOctants()
+	{
 		ivec2 position0 = toPixelPosition(vec3(0, 0, 0));
 		ivec2 position1 = toPixelPosition(vec3(0.2f, 0.5f, 0));
 		ivec2 position2 = toPixelPosition(vec3(0.5f, 0.2f, 0));
@@ -207,25 +267,6 @@ struct rendererObject
 		drawLine(position0, position6);
 		drawLine(position0, position7);
 		drawLine(position0, position8);
-
-		setPixel(toPixelPosition(a.position), vec3(1, 0, 0));
-		setPixel(toPixelPosition(b.position), vec3(0, 1, 0));
-		setPixel(toPixelPosition(c.position), vec3(0, 0, 1));
-	}
-
-	void setPixel(ivec2& pixelPosition, vec3& color)
-	{	
-		pixels[pixelPosition.y * width + pixelPosition.x] = color;
-	}
-
-	ivec2 toPixelPosition(vec3 const& position)
-	{
-		return ivec2((position.x + 1) * 0.5f * width, (position.y + 1) * 0.5f * height);
-	}
-
-	void printPos(ivec2 pos)
-	{
-		cout << pos.x << ", " << pos.y << endl;
 	}
 
 	void drawLine(ivec2 start, ivec2 end)
@@ -255,7 +296,8 @@ struct rendererObject
 
 		int numerator = longest; // >> 1
 		for (int i = 0; i <= longest; i++) {
-			setPixel(ivec2(x, y), vec3(1, 1, 1));
+			if (x >= 0 && x < width && y >= 0 && y < height)
+				setPixel(ivec2(x, y), vec3(1, 1, 1));
 			numerator += shortest;
 			if (!(numerator < longest)) {
 				numerator -= longest;
@@ -271,11 +313,6 @@ struct rendererObject
 		//int y = start.y;
 		//int dx = end.x - x;
 		//int dy = end.y - y;
-
-		////if (dx < 0)
-		////	x = end.x;
-		////if (dy < 0)
-		////	y = end.y;
 
 		//int D = 2 * dy - dx;
 

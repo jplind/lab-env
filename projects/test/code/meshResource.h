@@ -110,7 +110,7 @@ struct meshResource
 
 						indices.push_back(indexCount);
 						vertexIndices[iv] = indexCount++;
-						vertices.push_back(vertex(positions[(size_t)(iv.x - 1)], textureCoordinates[(size_t)(iv.y - 1)], normals[(size_t)(iv.z - 1)]));
+						vertices.push_back(vertex(positions[iv.x - 1], textureCoordinates[iv.y - 1], normals[iv.z - 1]));
 					}
 					else
 					{

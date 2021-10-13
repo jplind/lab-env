@@ -40,9 +40,9 @@ int main(int argc, const char** argv)
 	};
 
 	vertex vertices[] = { 
-		vertex(vec3(0.0f, 0.0f, 0), vec2(0, 0), vec3(0, 0, 0)), 
-		vertex(vec3(-0.5f, 0.2f, 0), vec2(0.5f, 1), vec3(0, 0, 0)), 
-		vertex(vec3(0.5f, -0.5f, 0), vec2(1, 0), vec3(0, 0, 0)) };
+		vertex(vec3(-0.2f, -0.2f, 0), vec2(0, 0), vec3(0, 0, 0)), 
+		vertex(vec3(0.0f, 0.2f, 0), vec2(0.5f, 1), vec3(0, 0, 0)), 
+		vertex(vec3(0.2f, -0.2f, 0), vec2(1, 0), vec3(0, 0, 0)) };
 
 	int model0 = renderer.createModel(vertices, triIndices);
 
