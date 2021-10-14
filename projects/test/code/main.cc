@@ -33,16 +33,16 @@ int main(int argc, const char** argv)
 
 	shared_ptr<textureResource> texture1(new textureResource("../../../wall2.jpg"));
 	shared_ptr<shaderObject> simpleShader(new shaderObject("../../../simple.shader"));
-	rendererObject renderer = rendererObject(width, height);
+	rendererObject renderer = rendererObject(width, height, texture1);
 
 	int triIndices[] = {
 		0, 1, 2
 	};
 
 	vertex vertices[] = { 
-		vertex(vec3(-0.2f, -0.2f, 0), vec2(0, 0), vec3(0, 0, 0)), 
-		vertex(vec3(0.0f, 0.2f, 0), vec2(0.5f, 1), vec3(0, 0, 0)), 
-		vertex(vec3(0.2f, -0.2f, 0), vec2(1, 0), vec3(0, 0, 0)) };
+		vertex(vec3(-1, -1, 0), vec2(0, 0), vec3(0, 0, 0)), 
+		vertex(vec3(0, 1, 0), vec2(0.5f, 1), vec3(0, 0, 0)), 
+		vertex(vec3(1, -1, 0), vec2(1, 0), vec3(0, 0, 0)) };
 
 	int model0 = renderer.createModel(vertices, triIndices);
 

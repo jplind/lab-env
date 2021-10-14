@@ -3,31 +3,6 @@
 #include <map>
 #include <algorithm>
 
-/*
-Adding a vertex buffer and index buffer.
-This should return a handle that can be used with the draw function.
-
-Setting up a framebuffer with arbitrary dimensions.
-
-Retrieving a pointer to the framebuffer.
-
-Retrieving the size of the framebuffer.
-
-Setting a vertex shader by providing a lambda function as an argument.
-
-Setting a pixel shader by providing a lambda function as an argument.
-
-Setting a model-view-projection matrix to transform the triangles with.
-
-Setting a texture resource to texture the mesh with.
-
-Rasterizing a triangle.
-
-Drawing an index buffer to the framebuffer by passing the buffer handle as an argument.
-This calls the RasterizeTriangle for each triangle in the index buffer.
-This should use the vertex and pixel shaders that has previously been set up.
-*/
-
 struct rendererObject
 {
 	int width;
@@ -36,8 +11,10 @@ struct rendererObject
 	unsigned int textureColorbuffer;
 	unsigned int quadVertexArrayObject;
 	vec3* pixels = new vec3[(long long)width * (long long)height];
+	map<int, vector<int>> edges;
+	shared_ptr<textureResource> texture;
 
-	vec3 eye = vec3(0, 0, 0.5f);
+	vec3 eye = vec3(0, 0, 2);
 	vec3 lookatDirection = vec3(0, 0, -1);
 	vec3 up = vec3(0, 1, 0);
 	mat4 viewMatrix = lookat(eye, eye + lookatDirection, up);
@@ -65,7 +42,7 @@ struct rendererObject
 	map<int, model> models;
 	int modelCount = 0;
 
-	rendererObject(int const& width, int const& height) : width(width), height(height)
+	rendererObject(int const& width, int const& height, shared_ptr<textureResource> texture) : width(width), height(height), texture(texture)
 	{
 		std::fill(pixels, pixels + (long long)width * (long long)height, vec3(0, 0, 0));
 		setupFullscreenQuad();
@@ -179,7 +156,6 @@ struct rendererObject
 	{
 		std::fill(pixels, pixels + (long long)width * (long long)height, vec3(0, 0, 0));
 		glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		/*glBindVertexArray(models[model].vertexArrayObject);
@@ -187,7 +163,7 @@ struct rendererObject
 
 		auto m = models[model];
 		m.rotate();
-		mat4 MVP = constructMVP(m);
+		mat4 MVP = m.rotation * viewMatrix * projectionMatrix;
 
 		vertex a = models[model].vertices[0];
 		vertex b = models[model].vertices[1];
@@ -199,17 +175,9 @@ struct rendererObject
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
 	}
 
-	mat4 constructMVP(model const& m)
-	{
-		mat4 modelTransformMatrix = m.rotation;
-		return modelTransformMatrix * viewMatrix * projectionMatrix;
-		//return projectionMatrix * viewMatrix * modelTransformMatrix;
-	}
-
 	void renderFramebufferToScreen()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glBindVertexArray(quadVertexArrayObject);
@@ -232,19 +200,34 @@ struct rendererObject
 		ivec2 bPosition = toPixelPosition(bPos);
 		ivec2 cPosition = toPixelPosition(cPos);
 
+		vec2 aUV = a.textureCoordinates;
+		vec2 bUV = b.textureCoordinates;
+		vec2 cUV = c.textureCoordinates;
+
 		drawLine(aPosition, bPosition);
 		drawLine(bPosition, cPosition);
 		drawLine(cPosition, aPosition);
+
+		scanlineFill(aPosition, bPosition, cPosition);
+		edges.clear();
 	}
 
 	void setPixel(ivec2 const& pixelPosition, vec3 const& color)
 	{	
-		pixels[pixelPosition.y * width + pixelPosition.x] = color;
+		if (pixelPosition.x > 0 && pixelPosition.x < width && pixelPosition.y > 0 && pixelPosition.y < height)
+			pixels[getPixelIndex(pixelPosition)] = color;
+	}
+
+	int getPixelIndex(ivec2 pixelPosition)
+	{
+		return pixelPosition.y * width + pixelPosition.x;
 	}
 
 	ivec2 toPixelPosition(vec3 const& position)
 	{
-		return ivec2((position.x + 1) * 0.5f * width, (position.y + 1) * 0.5f * height);
+		float x = (position.x + 1) * 0.5f * width;
+		float y = (position.y + 1) * 0.5f * height;
+		return ivec2(int(x + 0.5f), int(y + 0.5f));
 	}
 
 	void testOctants()
@@ -287,24 +270,29 @@ struct rendererObject
 		int longest = abs(w);
 		int shortest = abs(h);
 
-		if (!(longest > shortest)) {
+		if (longest < shortest)
+		{
 			longest = abs(h);
 			shortest = abs(w);
 			if (h < 0) dy2 = -1; else if (h > 0) dy2 = 1;
 			dx2 = 0;
 		}
 
-		int numerator = longest; // >> 1
-		for (int i = 0; i <= longest; i++) {
-			if (x >= 0 && x < width && y >= 0 && y < height)
-				setPixel(ivec2(x, y), vec3(1, 1, 1));
+		int numerator = longest;
+		for (int i = 0; i <= longest; i++) 
+		{
+			edges[y].push_back(x);
+			setPixel(ivec2(x, y), vec3(1, 1, 1));
+
 			numerator += shortest;
-			if (!(numerator < longest)) {
+			if (numerator > longest)
+			{
 				numerator -= longest;
 				x += dx1;
 				y += dy1;
 			}
-			else {
+			else 
+			{
 				x += dx2;
 				y += dy2;
 			}
@@ -354,5 +342,40 @@ struct rendererObject
 		//		setPixel(ivec2(x, y), vec3(1, 1, 1));
 		//	}
 		//}
+	}
+
+	void scanlineFill(ivec2 const& a, ivec2 const& b, ivec2 const& c)
+	{
+		for (auto const& edge : edges)
+		{
+			int y = edge.first;
+			int x1 = edge.second.front();
+			int x2 = edge.second.back();
+			int start = x1;
+			int end = x2;
+			if (x1 > x2)
+			{
+				start = x2;
+				end = x1;
+			}
+
+			float totalArea = triangleArea(a, b, c);
+
+			for (int x = start; x < end; x++)
+			{
+				ivec2 pixelPosition = ivec2(x, y);
+
+				float aWeight = triangleArea(b, c, pixelPosition) / totalArea;
+				float bWeight = triangleArea(a, c, pixelPosition) / totalArea;
+				float cWeight = triangleArea(a, b, pixelPosition) / totalArea;
+
+				setPixel(pixelPosition, vec3(aWeight, bWeight, cWeight));
+			}
+		}
+	}
+
+	float triangleArea(ivec2 const& a, ivec2 const& b, ivec2 const& c)
+	{
+		return 0.5f * fabsf(a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
 	}
 };
