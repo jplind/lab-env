@@ -14,7 +14,7 @@ struct rendererObject
 	map<int, vector<int>> edges;
 	shared_ptr<textureResource> texture;
 
-	vec3 eye = vec3(0, 0, 2);
+	vec3 eye = vec3(0, 0, 4);
 	vec3 lookatDirection = vec3(0, 0, -1);
 	vec3 up = vec3(0, 1, 0);
 	mat4 viewMatrix = lookat(eye, eye + lookatDirection, up);
@@ -113,9 +113,9 @@ struct rendererObject
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	int createModel(vertex* const& vertices, int* const& indices)
+	int createModel(vertex* const& vertices, int* const& indices, int numIndices)
 	{
-		int drawCount = 3;
+		int drawCount = numIndices;
 
 		unsigned int vertexArrayObject;
 		glGenVertexArrays(1, &vertexArrayObject);
@@ -165,11 +165,20 @@ struct rendererObject
 		m.rotate();
 		mat4 MVP = m.rotation * viewMatrix * projectionMatrix;
 
-		vertex a = models[model].vertices[0];
+		for (int i = 0; i < m.drawCount; i += 3)
+		{
+			vertex a = models[model].vertices[i];
+			vertex b = models[model].vertices[i + 1];
+			vertex c = models[model].vertices[i + 2];
+
+			rasterizeTriangle(MVP, a, b, c);
+		}
+
+		/*vertex a = models[model].vertices[0];
 		vertex b = models[model].vertices[1];
 		vertex c = models[model].vertices[2];
 
-		rasterizeTriangle(MVP, a, b, c);
+		rasterizeTriangle(MVP, a, b, c);*/
 
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
@@ -208,7 +217,7 @@ struct rendererObject
 		drawLine(bPosition, cPosition);
 		drawLine(cPosition, aPosition);
 
-		scanlineFill(aPosition, bPosition, cPosition);
+		scanlineFill(aPosition, bPosition, cPosition, aUV, bUV, cUV);
 		edges.clear();
 	}
 
@@ -274,7 +283,7 @@ struct rendererObject
 		{
 			longest = abs(h);
 			shortest = abs(w);
-			if (h < 0) dy2 = -1; else if (h > 0) dy2 = 1;
+			h < 0 ? dy2 = -1 : dy2 = 1;
 			dx2 = 0;
 		}
 
@@ -344,7 +353,7 @@ struct rendererObject
 		//}
 	}
 
-	void scanlineFill(ivec2 const& a, ivec2 const& b, ivec2 const& c)
+	void scanlineFill(ivec2 const& a, ivec2 const& b, ivec2 const& c, vec2& aUV, vec2& bUV, vec2& cUV)
 	{
 		for (auto const& edge : edges)
 		{
@@ -369,7 +378,21 @@ struct rendererObject
 				float bWeight = triangleArea(a, c, pixelPosition) / totalArea;
 				float cWeight = triangleArea(a, b, pixelPosition) / totalArea;
 
-				setPixel(pixelPosition, vec3(aWeight, bWeight, cWeight));
+				vec2 UV = aUV * aWeight + bUV * bWeight + cUV * cWeight;
+
+				UV.x = min(max(UV.x, 0.0f), 1.0f);
+				UV.y = min(max(UV.y, 0.0f), 1.0f);
+
+				unsigned char* data = texture->buffer;
+				int UVx = texture->width * UV.x + 0.5f;
+				int UVy = texture->height * UV.y + 0.5f;
+				
+				int index = 4 * (UVy * texture->width + UVx);
+				float r = data[index] / 255.0f;
+				float g = data[index + 1] / 255.0f;
+				float b = data[index + 2] / 255.0f;
+
+				setPixel(pixelPosition, vec3(r, g, b));
 			}
 		}
 	}
