@@ -35,7 +35,7 @@ int main(int argc, const char** argv)
 	shared_ptr<shaderObject> simpleShader(new shaderObject("../../../simple.shader"));
 	rendererObject renderer = rendererObject(width, height, texture1);
 
-	vertex vertices[] = { 
+	vertex triVertices[] = { 
 		vertex(vec3(-1, -1, 0), vec2(0, 0), vec3(0, 0, 0)), 
 		vertex(vec3(0, 1, 0), vec2(0.5f, 1), vec3(0, 0, 0)), 
 		vertex(vec3(1, -1, 0), vec2(1, 0), vec3(0, 0, 0)) 
@@ -45,9 +45,62 @@ int main(int argc, const char** argv)
 		0, 1, 2
 	};
 
-	int numIndices = sizeof(triIndices) / sizeof(triIndices[0]);
+	vertex quadVertices[] = {
+		vertex(vec3(-1, -1, -1), vec2(0, 0), vec3(0, 0, 0)),
+		vertex(vec3(-1, 1, -1), vec2(0, 1), vec3(0, 0, 0)),
+		vertex(vec3(1, 1, -1), vec2(1, 1), vec3(0, 0, 0)),
+		vertex(vec3(1, -1, -1), vec2(1, 0), vec3(0, 0, 0)),
+	};
 
-	int model0 = renderer.createModel(vertices, triIndices, numIndices);
+	int quadIndices[] = {
+		0, 1, 2,
+		0, 2, 3
+	};
+
+	vertex cubeVertices[24] = {
+		vertex(vec3(-1, -1, -1), vec2(0, 0), vec3(0, 0, -1)),
+		vertex(vec3(-1, 1, -1), vec2(0, 1), vec3(0, 0, -1)),
+		vertex(vec3(1, 1, -1), vec2(1, 1), vec3(0, 0, -1)),
+		vertex(vec3(1, -1, -1), vec2(1, 0), vec3(0, 0, -1)),
+
+		vertex(vec3(-1, -1, 1), vec2(0, 0), vec3(0, 0, 1)),
+		vertex(vec3(-1, 1, 1), vec2(0, 1), vec3(0, 0, 1)),
+		vertex(vec3(1, 1, 1), vec2(1, 1), vec3(0, 0, 1)),
+		vertex(vec3(1, -1, 1), vec2(1, 0), vec3(0, 0, 1)),
+
+		vertex(vec3(-1, -1, -1), vec2(0, 0), vec3(-1, 0, 0)),
+		vertex(vec3(-1, 1, -1), vec2(0, 1), vec3(-1, 0, 0)),
+		vertex(vec3(-1, 1, 1), vec2(1, 1), vec3(-1, 0, 0)),
+		vertex(vec3(-1, -1, 1), vec2(1, 0), vec3(-1, 0, 0)),
+
+		vertex(vec3(-1, 1, -1), vec2(0, 0), vec3(0, 1, 0)),
+		vertex(vec3(1, 1, -1), vec2(0, 1), vec3(0, 1, 0)),
+		vertex(vec3(1, 1, 1), vec2(1, 1), vec3(0, 1, 0)),
+		vertex(vec3(-1, 1, 1), vec2(1, 0), vec3(0, 1, 0)),
+
+		vertex(vec3(1, 1, -1), vec2(0, 0), vec3(1, 0, 0)),
+		vertex(vec3(1, -1, -1), vec2(0, 1), vec3(1, 0, 0)),
+		vertex(vec3(1, -1, 1), vec2(1, 1), vec3(1, 0, 0)),
+		vertex(vec3(1, 1, 1), vec2(1, 0), vec3(1, 0, 0)),
+
+		vertex(vec3(1, -1, -1), vec2(0, 0), vec3(0, -1, 0)),
+		vertex(vec3(-1, -1, -1), vec2(0, 1), vec3(0, -1, 0)),
+		vertex(vec3(-1, -1, 1), vec2(1, 1), vec3(0, -1, 0)),
+		vertex(vec3(1, -1, 1), vec2(1, 0), vec3(0, -1, 0))
+	};
+
+	int cubeIndices[36] = {
+	0, 1, 2, 0, 2, 3,
+	4, 5, 6, 4, 6, 7,
+	8, 9, 10, 8, 10, 11,
+	12, 13, 14, 12, 14, 15,
+	16, 17, 18, 16, 18, 19,
+	20, 21, 22, 20, 22, 23
+	};
+
+	int numIndices = sizeof(cubeIndices) / sizeof(cubeIndices[0]);
+
+	int model0 = renderer.createModel(cubeVertices, cubeIndices, numIndices);
 
 	simpleShader->use();
 	glBindTexture(GL_TEXTURE_2D, texture1->texture);

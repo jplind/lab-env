@@ -14,7 +14,7 @@ struct rendererObject
 	map<int, vector<int>> edges;
 	shared_ptr<textureResource> texture;
 
-	vec3 eye = vec3(0, 0, 4);
+	vec3 eye = vec3(0, 0, 8);
 	vec3 lookatDirection = vec3(0, 0, -1);
 	vec3 up = vec3(0, 1, 0);
 	mat4 viewMatrix = lookat(eye, eye + lookatDirection, up);
@@ -167,18 +167,12 @@ struct rendererObject
 
 		for (int i = 0; i < m.drawCount; i += 3)
 		{
-			vertex a = models[model].vertices[i];
-			vertex b = models[model].vertices[i + 1];
-			vertex c = models[model].vertices[i + 2];
+			vertex a = m.vertices[m.indices[i]];
+			vertex b = m.vertices[m.indices[i + 1]];
+			vertex c = m.vertices[m.indices[i + 2]];
 
-			rasterizeTriangle(MVP, a, b, c);
+			rasterizeTriangle(m.rotation, MVP, a, b, c);
 		}
-
-		/*vertex a = models[model].vertices[0];
-		vertex b = models[model].vertices[1];
-		vertex c = models[model].vertices[2];
-
-		rasterizeTriangle(MVP, a, b, c);*/
 
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
@@ -194,7 +188,7 @@ struct rendererObject
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
-	void rasterizeTriangle(mat4 const& MVP, vertex& a, vertex& b, vertex& c)
+	void rasterizeTriangle(mat4 const& rotation, mat4 const& MVP, vertex& a, vertex& b, vertex& c)
 	{
 		vec4 rotatedPosition = MVP * vec4(a.position.x, a.position.y, a.position.z, 1);
 		vec3 aPos = vec3(rotatedPosition.x / rotatedPosition.w, rotatedPosition.y / rotatedPosition.w, rotatedPosition.z / rotatedPosition.w);
@@ -204,6 +198,15 @@ struct rendererObject
 
 		rotatedPosition = MVP * vec4(c.position.x, c.position.y, c.position.z, 1);
 		vec3 cPos = vec3(rotatedPosition.x / rotatedPosition.w, rotatedPosition.y / rotatedPosition.w, rotatedPosition.z / rotatedPosition.w);
+
+		vec4 rotatedNormal = rotation * vec4(a.normal.x, a.normal.y, a.normal.z, 1);
+		vec3 aNormal = normalize(vec3(rotatedNormal.x, rotatedNormal.y, rotatedNormal.z));
+
+		rotatedNormal = rotation * vec4(b.normal.x, b.normal.y, b.normal.z, 1);
+		vec3 bNormal = normalize(vec3(rotatedNormal.x, rotatedNormal.y, rotatedNormal.z));
+
+		rotatedNormal = rotation * vec4(c.normal.x, c.normal.y, c.normal.z, 1);
+		vec3 cNormal = normalize(vec3(rotatedNormal.x, rotatedNormal.y, rotatedNormal.z));
 
 		ivec2 aPosition = toPixelPosition(aPos);
 		ivec2 bPosition = toPixelPosition(bPos);
@@ -217,7 +220,15 @@ struct rendererObject
 		drawLine(bPosition, cPosition);
 		drawLine(cPosition, aPosition);
 
-		scanlineFill(aPosition, bPosition, cPosition, aUV, bUV, cUV);
+		float normal = (aNormal.z + bNormal.z + cNormal.z) / 3.0f;
+
+		if (normal <= 0)
+		{
+			edges.clear();
+			return;
+		}
+
+		scanlineFill(aPosition, bPosition, cPosition, aUV, bUV, cUV, aNormal, bNormal, cNormal);
 		edges.clear();
 	}
 
@@ -291,7 +302,6 @@ struct rendererObject
 		for (int i = 0; i <= longest; i++) 
 		{
 			edges[y].push_back(x);
-			setPixel(ivec2(x, y), vec3(1, 1, 1));
 
 			numerator += shortest;
 			if (numerator > longest)
@@ -353,7 +363,7 @@ struct rendererObject
 		//}
 	}
 
-	void scanlineFill(ivec2 const& a, ivec2 const& b, ivec2 const& c, vec2& aUV, vec2& bUV, vec2& cUV)
+	void scanlineFill(ivec2 const& a, ivec2 const& b, ivec2 const& c, vec2& aUV, vec2& bUV, vec2& cUV, vec3 const& aNormal, vec3 const& bNormal, vec3 const& cNormal)
 	{
 		for (auto const& edge : edges)
 		{
