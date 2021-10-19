@@ -10,15 +10,30 @@ struct rendererObject
 	unsigned int framebufferObject;
 	unsigned int textureColorbuffer;
 	unsigned int quadVertexArrayObject;
+
 	vec3* pixels = new vec3[(long long)width * (long long)height];
+	float* depthBuffer = new float[(long long)width * (long long)height];
+
 	map<int, vector<int>> edges;
 	shared_ptr<textureResource> texture;
 
-	vec3 eye = vec3(0, 0, 8);
+	vec3 position = vec3(0, 2, 6);
 	vec3 lookatDirection = vec3(0, 0, -1);
 	vec3 up = vec3(0, 1, 0);
-	mat4 viewMatrix = lookat(eye, eye + lookatDirection, up);
+	mat4 viewMatrix = lookat(position, position + lookatDirection, up);
 	mat4 projectionMatrix = perspective(70, (float)width / (float)height, 0.1f, 100.0f);
+
+	GLFWwindow* window;
+	
+	const float sensitivity = 0.05f;
+	const float cameraSpeed = 5;
+
+	// mouselook variables
+	float yaw = -90;
+	float pitch = 0;
+	bool firstUpdate = true;
+	float lastX = 0;
+	float lastY = 0;
 
 	struct model
 	{
@@ -42,9 +57,10 @@ struct rendererObject
 	map<int, model> models;
 	int modelCount = 0;
 
-	rendererObject(int const& width, int const& height, shared_ptr<textureResource> texture) : width(width), height(height), texture(texture)
+	rendererObject(int const& width, int const& height, shared_ptr<textureResource> texture, GLFWwindow* window) : width(width), height(height), texture(texture), window(window)
 	{
 		std::fill(pixels, pixels + (long long)width * (long long)height, vec3(0, 0, 0));
+		std::fill(depthBuffer, depthBuffer + (long long)width * (long long)height, 255);
 		setupFullscreenQuad();
 		setupFramebufferObject();
 	}
@@ -92,6 +108,7 @@ struct rendererObject
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 		// attach it to currently bound framebuffer object
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
@@ -155,12 +172,13 @@ struct rendererObject
 	void renderToFramebuffer(int const& model)
 	{
 		std::fill(pixels, pixels + (long long)width * (long long)height, vec3(0, 0, 0));
-		glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		std::fill(depthBuffer, depthBuffer + (long long)width * (long long)height, 255);
+		
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		/*glBindVertexArray(models[model].vertexArrayObject);
 		glDrawElements(GL_TRIANGLES, models[model].drawCount, GL_UNSIGNED_INT, NULL);*/
-
+		
 		auto m = models[model];
 		m.rotate();
 		mat4 MVP = m.rotation * viewMatrix * projectionMatrix;
@@ -174,6 +192,7 @@ struct rendererObject
 			rasterizeTriangle(m.rotation, MVP, a, b, c);
 		}
 
+		glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject);
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_FLOAT, pixels);
 	}
@@ -190,23 +209,31 @@ struct rendererObject
 
 	void rasterizeTriangle(mat4 const& rotation, mat4 const& MVP, vertex& a, vertex& b, vertex& c)
 	{
+		vec4 rotatedNormal = rotation * vec4(a.normal.x, a.normal.y, a.normal.z, 1);
+		vec3 aNormal = vec3(rotatedNormal.x, rotatedNormal.y, rotatedNormal.z);
+
+		vec3 trianglePos = a.position;
+		if (dot(trianglePos - position, aNormal) >= 0)
+			return;
+
+		rotatedNormal = rotation * vec4(b.normal.x, b.normal.y, b.normal.z, 1);
+		vec3 bNormal = vec3(rotatedNormal.x, rotatedNormal.y, rotatedNormal.z);
+
+		rotatedNormal = rotation * vec4(c.normal.x, c.normal.y, c.normal.z, 1);
+		vec3 cNormal = vec3(rotatedNormal.x, rotatedNormal.y, rotatedNormal.z);
+
 		vec4 rotatedPosition = MVP * vec4(a.position.x, a.position.y, a.position.z, 1);
 		vec3 aPos = vec3(rotatedPosition.x / rotatedPosition.w, rotatedPosition.y / rotatedPosition.w, rotatedPosition.z / rotatedPosition.w);
+		float aW = rotatedPosition.w;
 
 		rotatedPosition = MVP * vec4(b.position.x, b.position.y, b.position.z, 1);
 		vec3 bPos = vec3(rotatedPosition.x / rotatedPosition.w, rotatedPosition.y / rotatedPosition.w, rotatedPosition.z / rotatedPosition.w);
+		float bW = rotatedPosition.w;
 
 		rotatedPosition = MVP * vec4(c.position.x, c.position.y, c.position.z, 1);
 		vec3 cPos = vec3(rotatedPosition.x / rotatedPosition.w, rotatedPosition.y / rotatedPosition.w, rotatedPosition.z / rotatedPosition.w);
-
-		vec4 rotatedNormal = rotation * vec4(a.normal.x, a.normal.y, a.normal.z, 1);
-		vec3 aNormal = normalize(vec3(rotatedNormal.x, rotatedNormal.y, rotatedNormal.z));
-
-		rotatedNormal = rotation * vec4(b.normal.x, b.normal.y, b.normal.z, 1);
-		vec3 bNormal = normalize(vec3(rotatedNormal.x, rotatedNormal.y, rotatedNormal.z));
-
-		rotatedNormal = rotation * vec4(c.normal.x, c.normal.y, c.normal.z, 1);
-		vec3 cNormal = normalize(vec3(rotatedNormal.x, rotatedNormal.y, rotatedNormal.z));
+		float cW = rotatedPosition.w;
+		
 
 		ivec2 aPosition = toPixelPosition(aPos);
 		ivec2 bPosition = toPixelPosition(bPos);
@@ -220,16 +247,7 @@ struct rendererObject
 		drawLine(bPosition, cPosition);
 		drawLine(cPosition, aPosition);
 
-		float normal = (aNormal.z + bNormal.z + cNormal.z) / 3.0f;
-
-		if (normal <= 0)
-		{
-			edges.clear();
-			return;
-		}
-
-		scanlineFill(aPosition, bPosition, cPosition, aUV, bUV, cUV, aNormal, bNormal, cNormal);
-		edges.clear();
+		scanlineFill(aPosition, bPosition, cPosition, aUV, bUV, cUV, aNormal, bNormal, cNormal, aW, bW, cW, aPos.z, bPos.z, cPos.z);
 	}
 
 	void setPixel(ivec2 const& pixelPosition, vec3 const& color)
@@ -274,10 +292,33 @@ struct rendererObject
 
 	void drawLine(ivec2 start, ivec2 end)
 	{
+		if (start == end)
+		{
+			edges[start.y].push_back(start.x);
+			return;
+		}
+
 		int x = start.x;
 		int y = start.y;
 		int w = end.x - x;
 		int h = end.y - y;
+
+		if (w == 0)
+		{
+			drawVerticalLine(start, end);
+			return;
+		}
+		if (h == 0)
+		{
+			drawHorizontalLine(start, end);
+			return;
+		}
+		if (w == h)
+		{
+			drawDiagonalLine(start, end);
+			return;
+		}
+
 		int dx1 = 0;
 		int dy1 = 0;
 		int dx2 = 0;
@@ -298,7 +339,7 @@ struct rendererObject
 			dx2 = 0;
 		}
 
-		int numerator = longest;
+		int numerator = longest / 2;
 		for (int i = 0; i <= longest; i++) 
 		{
 			edges[y].push_back(x);
@@ -316,99 +357,155 @@ struct rendererObject
 				y += dy2;
 			}
 		}
-		//int x = start.x;
-		//int y = start.y;
-		//int dx = end.x - x;
-		//int dy = end.y - y;
-
-		//int D = 2 * dy - dx;
-
-		//if (abs(dx) > abs(dy))
-		//{
-		//	int c1 = 2 * dy;
-		//	int c2 = -2 * (dx - dy);
-
-		//	for (; x < end.x; x++)
-		//	{
-		//		if (D > 0)
-		//		{
-		//			y++;
-		//			D += c2;
-		//		}
-		//		else
-		//		{
-		//			D += c1;
-		//		}
-		//		setPixel(ivec2(x, y), vec3(1, 1, 1));
-		//	}
-		//}
-		//else
-		//{
-		//	int c1 = 2 * dx;
-		//	int c2 = -2 * (dy - dx);
-
-		//	for (y; y < end.y; y++)
-		//	{
-		//		if (D > 0)
-		//		{
-		//			x++;
-		//			D += c2;
-		//		}
-		//		else
-		//		{
-		//			D += c1;
-		//		}
-		//		setPixel(ivec2(x, y), vec3(1, 1, 1));
-		//	}
-		//}
 	}
 
-	void scanlineFill(ivec2 const& a, ivec2 const& b, ivec2 const& c, vec2& aUV, vec2& bUV, vec2& cUV, vec3 const& aNormal, vec3 const& bNormal, vec3 const& cNormal)
+	void drawHorizontalLine(ivec2 const& a, ivec2 const& b)
 	{
-		for (auto const& edge : edges)
+		int y = a.y;
+		int start = min(a.x, b.x);
+		int end = max(a.x, b.x);
+		for (int x = start; x <= end; x++)
+			edges[y].push_back(x);
+	}
+
+	void drawVerticalLine(ivec2 const& a, ivec2 const& b)
+	{
+		int x = a.x;
+		int start = min(a.y, b.y);
+		int end = max(a.y, b.y);
+		for (int y = start; y <= end; y++)
+			edges[y].push_back(x);
+	}
+
+	void drawDiagonalLine(ivec2 const& a, ivec2 const& b)
+	{
+		int x = a.x;
+		int y = a.y;
+		int dx = 1;
+		int dy = 1;
+		if (b.x - a.x < 0)
+			dx = -1;
+		if (b.y - a.y < 0)
+			dy = -1;
+		int length = abs(a.x - b.x);
+
+		for (int i = 0; i <= length; i++)
 		{
-			int y = edge.first;
-			int x1 = edge.second.front();
-			int x2 = edge.second.back();
-			int start = x1;
-			int end = x2;
-			if (x1 > x2)
-			{
-				start = x2;
-				end = x1;
-			}
-
-			float totalArea = triangleArea(a, b, c);
-
-			for (int x = start; x < end; x++)
-			{
-				ivec2 pixelPosition = ivec2(x, y);
-
-				float aWeight = triangleArea(b, c, pixelPosition) / totalArea;
-				float bWeight = triangleArea(a, c, pixelPosition) / totalArea;
-				float cWeight = triangleArea(a, b, pixelPosition) / totalArea;
-
-				vec2 UV = aUV * aWeight + bUV * bWeight + cUV * cWeight;
-
-				UV.x = min(max(UV.x, 0.0f), 1.0f);
-				UV.y = min(max(UV.y, 0.0f), 1.0f);
-
-				unsigned char* data = texture->buffer;
-				int UVx = texture->width * UV.x + 0.5f;
-				int UVy = texture->height * UV.y + 0.5f;
-				
-				int index = 4 * (UVy * texture->width + UVx);
-				float r = data[index] / 255.0f;
-				float g = data[index + 1] / 255.0f;
-				float b = data[index + 2] / 255.0f;
-
-				setPixel(pixelPosition, vec3(r, g, b));
-			}
+			edges[y].push_back(x);
+			x += dx;
+			y += dy;
 		}
 	}
 
 	float triangleArea(ivec2 const& a, ivec2 const& b, ivec2 const& c)
 	{
-		return 0.5f * fabsf(a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+		return 0.5f * abs(a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+	}
+
+	void scanlineFill(ivec2 const& a, ivec2 const& b, ivec2 const& c, vec2& aUV, vec2& bUV, vec2& cUV, vec3 const& aNormal, vec3 const& bNormal, vec3 const& cNormal, float aW, float bW, float cW, float aZ, float bZ, float cZ)
+	{
+		for (auto const& edge : edges)
+		{
+			int y = edge.first;
+			int start = *std::min_element(edges[y].begin(), edges[y].end());
+			int end = *std::max_element(edges[y].begin(), edges[y].end());
+
+			float totalArea = triangleArea(a, b, c);
+
+			for (int x = start; x <= end; x++)
+			{
+				if (x < 0 || x >= width || y < 0 || y >= height)
+					continue;
+
+				ivec2 pixelPosition = ivec2(x, y);
+
+				float aWeight = triangleArea(b, c, pixelPosition) / totalArea;
+				float bWeight = triangleArea(a, c, pixelPosition) / totalArea;
+				float cWeight = 1 - aWeight - bWeight;
+
+				float z = aZ * aWeight + bZ * bWeight + cZ * cWeight;
+				if (depthBuffer[getPixelIndex(pixelPosition)] < z)
+					continue;
+
+				float U = ((aUV.x / aW) * aWeight + (bUV.x / bW) * bWeight + (cUV.x / cW) * cWeight) / ((1 / aW) * aWeight + (1 / bW) * bWeight + (1 / cW) * cWeight);
+				float V = ((aUV.y / aW) * aWeight + (bUV.y / bW) * bWeight + (cUV.y / cW) * cWeight) / ((1 / aW) * aWeight + (1 / bW) * bWeight + (1 / cW) * cWeight);
+				vec2 UV = vec2(U, V);
+
+				UV.x = min(max(UV.x, 0.0f), 1.0f);
+				UV.y = min(max(UV.y, 0.0f), 1.0f);
+
+				unsigned char* data = texture->buffer;
+				int UVx = int(texture->width * UV.x + 0.5f);
+				int UVy = int(texture->height * UV.y + 0.5f);
+				
+				int index = 4 * (UVy * texture->width + UVx);
+				if (!data[index])
+					continue;
+
+				float r = data[index] / 255.0f;
+				float g = data[index + 1] / 255.0f;
+				float b = data[index + 2] / 255.0f;
+
+				setPixel(pixelPosition, vec3(r, g, b));
+				depthBuffer[getPixelIndex(pixelPosition)] = z;
+			}
+		}
+		edges.clear();
+	}
+
+	void updateCamera(float const& deltaTime)
+	{
+		// update position from wasd input
+		vec3 translation = vec3();
+		translation += normalize(vec3(lookatDirection.x, 0, lookatDirection.z))
+			* (float)((int)(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) - (int)(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS));
+		translation += cross(lookatDirection, up)
+			* (float)((int)(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) - (int)(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS));
+		if (translation != vec3())
+			position += normalize(translation) * cameraSpeed * deltaTime;
+
+		// get cursor xy coordinates
+		double xPos;
+		double yPos;
+		glfwGetCursorPos(window, &xPos, &yPos);
+
+		// calculate xy offsets
+		float xOffset;
+		float yOffset;
+		if (firstUpdate)
+		{
+			xOffset = 0;
+			yOffset = 0;
+			firstUpdate = false;
+		}
+		else
+		{
+			xOffset = (float)xPos - lastX;
+			yOffset = (float)yPos - lastY;
+		}
+
+		// update last position
+		lastX = (float)xPos;
+		lastY = (float)yPos;
+
+		// apply mouselook sensitivity scaling
+		xOffset *= sensitivity;
+		yOffset *= sensitivity;
+
+		// add offsets to yaw and pitch
+		yaw += xOffset;
+		pitch -= yOffset;
+
+		// clamp pitch to prevent flipping y-axis and breaking neck
+		if (pitch > 50.0f)
+			pitch = 50.0f;
+		if (pitch < -70.0f)
+			pitch = -70.0f;
+
+		// construct new lookat direction from yaw and pitch
+		lookatDirection = normalize(vec3(cosf(toRadians(yaw)) * cosf(toRadians(pitch)), sinf(toRadians(pitch)), sinf(toRadians(yaw)) * cosf(toRadians(pitch))));
+
+		// construct view matrix
+		viewMatrix = lookat(position, position + lookatDirection, up);
 	}
 };

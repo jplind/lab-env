@@ -24,32 +24,32 @@ int main(int argc, const char** argv)
     }
 
     glfwMakeContextCurrent(window);
-
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glewExperimental = GL_TRUE;
     glewInit();
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	shared_ptr<textureResource> texture1(new textureResource("../../../wall.jpg"));
+	shared_ptr<textureResource> texture1(new textureResource("../../../crateTexture.png"));
 	shared_ptr<shaderObject> simpleShader(new shaderObject("../../../simple.shader"));
-	rendererObject renderer = rendererObject(width, height, texture1);
+	rendererObject renderer = rendererObject(width, height, texture1, window);
 
-	vertex triVertices[] = { 
-		vertex(vec3(-1, -1, 0), vec2(0, 0), vec3(0, 0, 0)), 
-		vertex(vec3(0, 1, 0), vec2(0.5f, 1), vec3(0, 0, 0)), 
-		vertex(vec3(1, -1, 0), vec2(1, 0), vec3(0, 0, 0)) 
+	vertex triangleVertices[] = { 
+		vertex(vec3(-1, -1, -1), vec2(0, 0), vec3(0, 0, -1)), 
+		vertex(vec3(0, 1, -1), vec2(0.5f, 1), vec3(0, 0, -1)), 
+		vertex(vec3(1, -1, -1), vec2(1, 0), vec3(0, 0, -1)) 
 	};
 
-	int triIndices[] = {
+	int triangleIndices[] = {
 		0, 1, 2
 	};
 
 	vertex quadVertices[] = {
-		vertex(vec3(-1, -1, -1), vec2(0, 0), vec3(0, 0, 0)),
-		vertex(vec3(-1, 1, -1), vec2(0, 1), vec3(0, 0, 0)),
-		vertex(vec3(1, 1, -1), vec2(1, 1), vec3(0, 0, 0)),
-		vertex(vec3(1, -1, -1), vec2(1, 0), vec3(0, 0, 0)),
+		vertex(vec3(-1, -1, -1), vec2(0, 0), vec3(0, 0, -1)),
+		vertex(vec3(-1, 1, -1), vec2(0, 1), vec3(0, 0, -1)),
+		vertex(vec3(1, 1, -1), vec2(1, 1), vec3(0, 0, -1)),
+		vertex(vec3(1, -1, -1), vec2(1, 0), vec3(0, 0, -1)),
 	};
 
 	int quadIndices[] = {
@@ -98,18 +98,30 @@ int main(int argc, const char** argv)
 	20, 21, 22, 20, 22, 23
 	};
 
-	int numIndices = sizeof(cubeIndices) / sizeof(cubeIndices[0]);
+	int numCubeIndices = sizeof(cubeIndices) / sizeof(cubeIndices[0]);
+	int numTriangleIndices = sizeof(triangleIndices) / sizeof(triangleIndices[0]);
+	int numQuadIndices = sizeof(quadIndices) / sizeof(quadIndices[0]);
 
-	int model0 = renderer.createModel(cubeVertices, cubeIndices, numIndices);
+	//int model0 = renderer.createModel(triangleVertices, triangleIndices, numTriangleIndices);
+	//int model0 = renderer.createModel(quadVertices, quadIndices, numQuadIndices);
+	int model0 = renderer.createModel(cubeVertices, cubeIndices, numCubeIndices);
 
 	simpleShader->use();
 	glBindTexture(GL_TEXTURE_2D, texture1->texture);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
+	float deltaTime = 0;
+	float lastFrame = 0;
+
     while (!glfwWindowShouldClose(window))
     {
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
+
+		float currentFrame = (float)glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		renderer.updateCamera(deltaTime);
 
 		/*glBindTexture(GL_TEXTURE_2D, texture1->texture);*/
 		glUseProgram(0);
