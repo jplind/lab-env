@@ -233,21 +233,20 @@ struct rendererObject
 		rotatedPosition = MVP * vec4(c.position.x, c.position.y, c.position.z, 1);
 		vec3 cPos = vec3(rotatedPosition.x / rotatedPosition.w, rotatedPosition.y / rotatedPosition.w, rotatedPosition.z / rotatedPosition.w);
 		float cW = rotatedPosition.w;
-		
-
-		ivec2 aPosition = toPixelPosition(aPos);
-		ivec2 bPosition = toPixelPosition(bPos);
-		ivec2 cPosition = toPixelPosition(cPos);
 
 		vec2 aUV = a.textureCoordinates;
 		vec2 bUV = b.textureCoordinates;
 		vec2 cUV = c.textureCoordinates;
 
+		ivec2 aPosition = toPixelPosition(aPos);
+		ivec2 bPosition = toPixelPosition(bPos);
+		ivec2 cPosition = toPixelPosition(cPos);
+
 		drawLine(aPosition, bPosition);
 		drawLine(bPosition, cPosition);
 		drawLine(cPosition, aPosition);
 
-		scanlineFill(aPosition, bPosition, cPosition, aUV, bUV, cUV, aNormal, bNormal, cNormal, aW, bW, cW, aPos.z, bPos.z, cPos.z);
+		scanlineFill(aPos, bPos, cPos, aUV, bUV, cUV, aNormal, bNormal, cNormal, aW, bW, cW, aPos.z, bPos.z, cPos.z);
 	}
 
 	void setPixel(ivec2 const& pixelPosition, vec3 const& color)
@@ -402,7 +401,7 @@ struct rendererObject
 		return 0.5f * abs(a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
 	}
 
-	void scanlineFill(ivec2 const& a, ivec2 const& b, ivec2 const& c, vec2& aUV, vec2& bUV, vec2& cUV, vec3 const& aNormal, vec3 const& bNormal, vec3 const& cNormal, float aW, float bW, float cW, float aZ, float bZ, float cZ)
+	void scanlineFill(vec3 const& aPos, vec3 const& bPos, vec3 const& cPos, vec2& aUV, vec2& bUV, vec2& cUV, vec3 const& aNormal, vec3 const& bNormal, vec3 const& cNormal, float aW, float bW, float cW, float aZ, float bZ, float cZ)
 	{
 		for (auto const& edge : edges)
 		{
@@ -410,6 +409,9 @@ struct rendererObject
 			int start = *std::min_element(edges[y].begin(), edges[y].end());
 			int end = *std::max_element(edges[y].begin(), edges[y].end());
 
+			ivec2 a = toPixelPosition(aPos);
+			ivec2 b = toPixelPosition(bPos);
+			ivec2 c = toPixelPosition(cPos);
 			float totalArea = triangleArea(a, b, c);
 
 			for (int x = start; x <= end; x++)
@@ -446,11 +448,40 @@ struct rendererObject
 				float g = data[index + 1] / 255.0f;
 				float b = data[index + 2] / 255.0f;
 
-				setPixel(pixelPosition, vec3(r, g, b));
+				vec3 currentPos = aPos * aWeight + bPos * bWeight + cPos * cWeight;
+				vec3 light = calculateLightPoint(vec3(0, 3, 0), vec3(1, 1, 1), 15, aNormal, currentPos);
+
+				vec3 color = vec3(light.x * r, light.y * g, light.z * b);
+
+				setPixel(pixelPosition, color);
 				depthBuffer[getPixelIndex(pixelPosition)] = z;
 			}
 		}
 		edges.clear();
+	}
+
+	vec3 calculateLightPoint(vec3 lightPos, vec3 lightColor, float lightIntensity, vec3 Normal, vec3 currentPos)
+	{
+		float ambient = 0.15f;
+		vec3 normal = normalize(Normal);
+		vec3 lightDirection = normalize(lightPos - currentPos);
+		float diffuse = max(dot(normal, lightDirection), 0.0f);
+
+		float specularLight = 0.4f;
+		vec3 viewDirection = normalize(position - currentPos);
+		vec3 reflectionDirection = reflect(-lightDirection, normal);
+		float specularAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 20);
+		float specular = specularAmount * specularLight;
+
+		float distance = length(lightPos - currentPos);
+		float attenuation = min(max(lightIntensity / (distance * distance), 0.0f), 1.0f);
+
+		return  lightColor * (ambient + diffuse + specular) * attenuation;
+	}
+
+	vec3 reflect(vec3 I, vec3 N)
+	{
+		return I - N * 2.0 * dot(N, I);
 	}
 
 	void updateCamera(float const& deltaTime)

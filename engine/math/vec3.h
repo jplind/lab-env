@@ -56,7 +56,7 @@ struct vec3
 		z *= scalar;
 	}
 
-	vec3 operator*(float const& scalar)
+	vec3 operator*(float const& scalar) const
 	{
 		return vec3(x * scalar, y * scalar, z * scalar);
 	}
