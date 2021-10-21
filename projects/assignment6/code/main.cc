@@ -29,9 +29,6 @@ int main(int argc, const char** argv)
     glewExperimental = GL_TRUE;
     glewInit();
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-
 	float deltaTime = 0;
 	float lastFrame = 0;
 
@@ -80,8 +77,9 @@ int main(int argc, const char** argv)
 
 	shared_ptr<textureResource> texture1(new textureResource("../../../crate4.png"));
 	shared_ptr<shaderObject> simpleShader(new shaderObject("../../../simple.shader"));
-	shared_ptr<cameraObject> camera(new cameraObject(window, vec3(0, 2, 5), width, height));
+	shared_ptr<cameraObject> camera(new cameraObject(window, vec3(0, 2, 8), width, height));
 	shared_ptr<lightPoint> light(new lightPoint(vec3(0, 5, 0), vec3(1, 1, 1), 10));
+
 	simpleShader->use();
 
 	rendererObject renderer = rendererObject(width, height, texture1, camera, light);
@@ -99,7 +97,6 @@ int main(int argc, const char** argv)
 		lastFrame = currentFrame;
 
 		camera->update(deltaTime);
-		renderer.updateViewMatrix();
 
 		renderer.clearBuffers();
 		renderer.models[model0].rotate(deltaTime);

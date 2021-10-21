@@ -14,7 +14,6 @@ struct cameraObject
 	int width;
 	int height;
 
-	mat4 projectionMatrix = perspective(70, (float)width / (float)height, 0.1f, 100.0f);
 	mat4 viewMatrix = lookat(position, position + lookatDirection, up);
 
 	float yaw = -90;

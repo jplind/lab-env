@@ -8,5 +8,6 @@ struct vertex
 	vec3 normal;
 
 	vertex() : position(vec3()), textureCoordinates(vec2()), normal(vec3()) {}
+	vertex(vertex const& v) : position(v.position), textureCoordinates(v.textureCoordinates), normal(v.normal) {}
 	vertex(vec3 const& position, vec2 const& textureCoordinates, vec3 const& normal) : position(position), textureCoordinates(textureCoordinates), normal(normal) {}
 };

@@ -6,45 +6,18 @@
 
 struct textureResource
 {
-	GLuint texture;
-	std::string filePath;
-	unsigned char* buffer;
+	unsigned char* data;
 	int width;
 	int height;
 	int BPP;
 
-	textureResource(std::string const& filePath) : filePath(filePath) 
+	textureResource(std::string const& filePath) 
 	{
-		buffer = stbi_load(filePath.c_str(), &width, &height, &BPP, 4);
-
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		/*if (buffer)
-			stbi_image_free(buffer);*/
+		data = stbi_load(filePath.c_str(), &width, &height, &BPP, 4);
 	}
 
 	~textureResource()
 	{
-		glDeleteTextures(1, &texture);
-	}
-
-	void bind(unsigned int const& slot)
-	{
-		glActiveTexture(GL_TEXTURE0 + slot);
-		glBindTexture(GL_TEXTURE_2D, texture);
-	}
-
-	void unbind()
-	{
-		glBindTexture(GL_TEXTURE_2D, 0);
+		delete[] data;
 	}
 };
