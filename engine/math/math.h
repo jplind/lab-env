@@ -12,3 +12,13 @@ float toRadians(const float& degrees)
 {
 	return degrees * (float)PI / 180.0f;
 }
+
+vec3 toVec3(vec4 const& vec)
+{
+	return vec3(vec.x, vec.y, vec.z);
+}
+
+vec4 toVec4(vec3 const& vec)
+{
+	return vec4(vec.x, vec.y, vec.z, 1.0f);
+}

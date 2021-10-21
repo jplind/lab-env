@@ -28,8 +28,8 @@ struct textureResource
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		if (buffer)
-			stbi_image_free(buffer);
+		/*if (buffer)
+			stbi_image_free(buffer);*/
 	}
 
 	~textureResource()

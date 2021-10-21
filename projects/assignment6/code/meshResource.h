@@ -1,6 +1,7 @@
 #pragma once
 #include "render/window.h"
 #include "math/math.h"
+#include "vertex.h"
 #include <vector>
 #include <string>
 #include <fstream>
@@ -12,16 +13,6 @@ using namespace std;
 
 struct meshResource
 {
-	struct vertex
-	{
-		vec3 position;
-		vec2 textureCoordinates;
-		vec3 normal;
-
-		vertex() : position(vec3()), textureCoordinates(vec2()), normal(vec3()) {}
-		vertex(vec3 const& position, vec2 const& textureCoordinates, vec3 const& normal) : position(position), textureCoordinates(textureCoordinates), normal(normal) {}
-	};
-
 	GLuint vertexArrayObject;
 	GLuint vertexBufferObject;
 	GLuint indexBufferObject;
@@ -119,7 +110,7 @@ struct meshResource
 
 						indices.push_back(indexCount);
 						vertexIndices[iv] = indexCount++;
-						vertices.push_back(vertex(positions[iv.x - 1], textureCoordinates[iv.y - 1], normals[iv.z - 1]));
+						vertices.push_back(vertex(positions[(long long)iv.x - 1], textureCoordinates[(long long)iv.y - 1], normals[(long long)iv.z - 1]));
 					}
 					else
 					{

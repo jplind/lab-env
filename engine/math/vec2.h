@@ -51,7 +51,7 @@ struct vec2
 		y *= scalar;
 	}
 
-	vec2 operator*(float const scalar)
+	vec2 operator*(float const scalar) const
 	{
 		return vec2(x * scalar, y * scalar);
 	}
