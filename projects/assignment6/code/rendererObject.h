@@ -13,7 +13,7 @@ struct rendererObject
 	unsigned int textureColorbuffer;
 	unsigned int quadVertexArrayObject;
 
-	vec3* colorbuffer = new vec3[(long long)width * (long long)height];
+	vec3* colorBuffer = new vec3[(long long)width * (long long)height];
 	float* depthBuffer = new float[(long long)width * (long long)height];
 
 	map<int, vector<int>> edges;
@@ -67,13 +67,13 @@ struct rendererObject
 
 	~rendererObject()
 	{
-		delete[] colorbuffer;
+		delete[] colorBuffer;
 		delete[] depthBuffer;
 	}
 
 	void clearBuffers()
 	{
-		std::fill(colorbuffer, colorbuffer + bufferSize, vec3(0, 0, 0));
+		std::fill(colorBuffer, colorBuffer + bufferSize, vec3(0, 0, 0));
 		std::fill(depthBuffer, depthBuffer + bufferSize, 255);
 	}
 
@@ -153,7 +153,7 @@ struct rendererObject
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject);
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_FLOAT, colorbuffer);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_FLOAT, colorBuffer);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -162,40 +162,36 @@ struct rendererObject
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
-	void rasterizeTriangle(vertex const& a, vertex const& b, vertex const& c)
+	void rasterizeTriangle(vertex& a, vertex& b, vertex& c)
 	{
-		vertex aM = a;
-		vertex bM = b;
-		vertex cM = c;
-
-		vertex aMVP = a;
-		vertex bMVP = b;
-		vertex cMVP = c;
+		vec3 aWorldPos;
+		vec3 bWorldPos;
+		vec3 cWorldPos;
 
 		float aw;
 		float bw;
 		float cw;
 
-		if (!vertexShader(aM, aMVP, aw))
+		if (!vertexShader(aWorldPos, a, aw))
 			return;
-		if (!vertexShader(bM, bMVP, bw))
+		if (!vertexShader(bWorldPos, b, bw))
 			return;
-		if (!vertexShader(cM, cMVP, cw))
-			return;
-
-		if (dot(aM.position - camera->position, aM.normal) >= 0)
+		if (!vertexShader(cWorldPos, c, cw))
 			return;
 
-		findEdges(toPixelPosition(aMVP.position), toPixelPosition(bMVP.position));
-		findEdges(toPixelPosition(bMVP.position), toPixelPosition(cMVP.position));
-		findEdges(toPixelPosition(cMVP.position), toPixelPosition(aMVP.position));
+		if (dot(aWorldPos - camera->position, a.normal) >= 0)
+			return;
 
-		scanlineFillTriangle(aMVP, bMVP, cMVP, aw, bw, cw, aM, bM, cM);
+		findEdges(toPixelPosition(a.position), toPixelPosition(b.position));
+		findEdges(toPixelPosition(b.position), toPixelPosition(c.position));
+		findEdges(toPixelPosition(c.position), toPixelPosition(a.position));
+
+		scanlineFillTriangle(a, b, c, aw, bw, cw, aWorldPos, bWorldPos, cWorldPos);
 	}
 
 	void setPixel(ivec2 const& pixelPosition, vec3 const& color)
 	{	
-		colorbuffer[getBufferIndex(pixelPosition)] = color;
+		colorBuffer[getBufferIndex(pixelPosition)] = color;
 	}
 
 	int getBufferIndex(ivec2 const& pixelPosition)
@@ -311,21 +307,21 @@ struct rendererObject
 		return 0.5f * abs(a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
 	}
 
-	void scanlineFillTriangle(vertex const& a, vertex const& b, vertex const& c, float const& aw, float const& bw, float const& cw, vertex const& aM, vertex const& bM, vertex const& cM)
+	void scanlineFillTriangle(vertex const& a, vertex const& b, vertex const& c, float const& aw, float const& bw, float const& cw, vec3 const& aWorldPos, vec3 const& bWorldPos, vec3 const& cWorldPos)
 	{
-		ivec2 aPos = toPixelPosition(a.position);
-		ivec2 bPos = toPixelPosition(b.position);
-		ivec2 cPos = toPixelPosition(c.position);
-		float totalArea = triangleArea(aPos, bPos, cPos);
+		ivec2 aPixelPos = toPixelPosition(a.position);
+		ivec2 bPixelPos = toPixelPosition(b.position);
+		ivec2 cPixelPos = toPixelPosition(c.position);
+		float totalArea = triangleArea(aPixelPos, bPixelPos, cPixelPos);
 
-		vec2 aUV = a.textureCoordinates * (1.0f / aw);
 		float awInverse = 1.0f / aw;
-
-		vec2 bUV = b.textureCoordinates * (1.0f / bw);
+		vec2 aUV = a.textureCoordinates * awInverse;
+		
 		float bwInverse = 1.0f / bw;
-
-		vec2 cUV = c.textureCoordinates * (1.0f / cw);
+		vec2 bUV = b.textureCoordinates * bwInverse;
+		
 		float cwInverse = 1.0f / cw;
+		vec2 cUV = c.textureCoordinates * cwInverse;
 
 		for (auto const& edge : edges)
 		{
@@ -338,47 +334,45 @@ struct rendererObject
 				if (x < 0 || x >= width || y < 0 || y >= height)
 					continue;
 
-				ivec2 pixelPosition = ivec2(x, y);
+				ivec2 pixelPos = ivec2(x, y);
 
-				float aWeight = triangleArea(bPos, cPos, pixelPosition) / totalArea;
-				float bWeight = triangleArea(aPos, cPos, pixelPosition) / totalArea;
+				float aWeight = triangleArea(bPixelPos, cPixelPos, pixelPos) / totalArea;
+				float bWeight = triangleArea(aPixelPos, cPixelPos, pixelPos) / totalArea;
 				float cWeight = 1 - aWeight - bWeight;
 
 				float z = a.position.z * aWeight + b.position.z * bWeight + c.position.z * cWeight;
-				if (depthBuffer[getBufferIndex(pixelPosition)] < z)
+				if (depthBuffer[getBufferIndex(pixelPos)] < z)
 					continue;
-				depthBuffer[getBufferIndex(pixelPosition)] = z;
+				depthBuffer[getBufferIndex(pixelPos)] = z;
 
 				float denominator = awInverse * aWeight + bwInverse * bWeight + cwInverse * cWeight;
 				float U = (aUV.x * aWeight + bUV.x * bWeight + cUV.x * cWeight) / denominator;
 				float V = (aUV.y * aWeight + bUV.y * bWeight + cUV.y * cWeight) / denominator;
+				U = min(max(U, 0.0f), 1.0f);
+				V = min(max(V, 0.0f), 1.0f);
 				vec2 UV = vec2(U, V);
 
-				UV.x = min(max(UV.x, 0.0f), 1.0f);
-				UV.y = min(max(UV.y, 0.0f), 1.0f);
+				vec3 worldPos = aWorldPos * aWeight + bWorldPos * bWeight + cWorldPos * cWeight;
+				vec3 normal = a.normal * aWeight + b.normal * bWeight + c.normal * cWeight;
 
-				vec3 transformedPosition = aM.position * aWeight + bM.position * bWeight + cM.position * cWeight;
-				vec3 transformedNormal = a.normal * aWeight + b.normal * bWeight + c.normal * cWeight;
-
-				vec3 color = pixelShader(transformedPosition, UV, transformedNormal);
-				setPixel(pixelPosition, color);
+				vec3 color = pixelShader(worldPos, UV, normal);
+				setPixel(pixelPos, color);
 			}
 		}
 		edges.clear();
 	}
 
-	bool vertexShader(vertex& vM, vertex& vMVP, float& w)
+	bool vertexShader(vec3& worldPos, vertex& v, float& w)
 	{
-		vM.position = toVec3(modelTransformMatrix * vec4(vM.position.x, vM.position.y, vM.position.z, 1));
-		vM.normal = toVec3(modelTransformMatrix * vec4(vM.normal.x, vM.normal.y, vM.normal.z, 0));
-
-		vec4 clipPos = viewMatrix * projectionMatrix * vec4(vM.position.x, vM.position.y, vM.position.z, 1);
+		worldPos = toVec3(modelTransformMatrix * toVec4(v.position));
+		
+		vec4 clipPos = viewMatrix * projectionMatrix * toVec4(worldPos);
 		if (clipPos.z < near || clipPos.z > far)
 			return false;
 
 		w = clipPos.w;
-		vMVP.position = vec3(clipPos.x / clipPos.w, clipPos.y / clipPos.w, clipPos.z / clipPos.w);
-		vMVP.normal = vM.normal;
+		v.position = vec3(clipPos.x / w, clipPos.y / w, clipPos.z / w);
+		v.normal = toVec3(modelTransformMatrix * vec4(v.normal.x, v.normal.y, v.normal.z, 0));
 
 		return true;
 	}
@@ -393,6 +387,9 @@ struct rendererObject
 		float r = texture->data[index] / 255.0f;
 		float g = texture->data[index + 1] / 255.0f;
 		float b = texture->data[index + 2] / 255.0f;
+
+		if (r == 0 && g == 0 && b == 0)
+			return vec3(0, 0, 0);
 
 		vec3 lightColor = calculateLightPoint(light->position, light->color, light->intensity, normal, currentPos);
 
@@ -409,7 +406,7 @@ struct rendererObject
 		float specularLight = 0.4f;
 		vec3 viewDirection = normalize(camera->position - currentPos);
 		vec3 reflectionDirection = -lightDirection - normal * 2.0f * dot(normal, -lightDirection);
-		float specularAmount = powf(max(dot(viewDirection, reflectionDirection), 0.0f), 20);
+		float specularAmount = powf(max(dot(viewDirection, reflectionDirection), 0.0f), 50);
 		float specular = specularAmount * specularLight;
 
 		float distance = length(lightPos - currentPos);

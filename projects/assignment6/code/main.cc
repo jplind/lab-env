@@ -73,11 +73,11 @@ int main(int argc, const char** argv)
 	20, 21, 22, 20, 22, 23
 	};
 
-	int numCubeIndices = sizeof(cubeIndices) / sizeof(cubeIndices[0]);
+	int numCubeIndices = 36;
 
 	shared_ptr<textureResource> texture1(new textureResource("../../../crate4.png"));
 	shared_ptr<shaderObject> simpleShader(new shaderObject("../../../simple.shader"));
-	shared_ptr<cameraObject> camera(new cameraObject(window, vec3(0, 2, 8), width, height));
+	shared_ptr<cameraObject> camera(new cameraObject(window, vec3(0, 3, 8), width, height));
 	shared_ptr<lightPoint> light(new lightPoint(vec3(0, 5, 0), vec3(1, 1, 1), 10));
 
 	simpleShader->use();
